@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aufgabe 02 — Gekaskadete Selects</title>
+  <title>Aufgabe 02a — Gekaskadete Selects manuell</title>
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -16,7 +16,7 @@
       <span class="sep">·</span>
       <a href="01b-select-bind.html">← Vorherige</a>
       <span class="sep">·</span>
-      <a href="03-input-validation.html">Nächste →</a>
+      <a href="02b-nested-bind.html">Nächste →</a>
     </div>
   </div>
 </nav>
@@ -24,8 +24,8 @@
 <div class="container">
 
 <div class="page-header">
-  <div class="num">Aufgabe 02</div>
-  <h1>Gekaskadete Selects</h1>
+  <div class="num">Aufgabe 02a</div>
+  <h1>Gekaskadete Selects manuell</h1>
 </div>
 
 <div class="box goal">
@@ -42,6 +42,8 @@
     <code>Dictionary&lt;K,V&gt;</code>
     <code>Conditional Rendering</code>
     <code>@key</code>
+    <code>@onchange</code>
+    <code>ChangeEventArgs</code>
   </div>
 </div>
 
@@ -133,7 +135,7 @@ private async Task HandleCategoryChanged(string category)
 <details class="collapsible hint-3">
   <summary>🏁 Vollständige Lösung</summary>
   <div class="body">
-    <pre><code><span class="cm">@* CategorySelect.razor (Aufgabe 1 erweitert) *@</span>
+    <pre><code><span class="cm">@* CategorySelect.razor (manuell) *@</span>
 
 &lt;div class="mb-3"&gt;
     &lt;label class="form-label fw-bold"&gt;Kategorie&lt;/label&gt;
@@ -162,7 +164,7 @@ private async Task HandleCategoryChanged(string category)
             await OnCategoryChanged.InvokeAsync(selectedCategory);
     }
 }</code></pre>
-    <pre><code><span class="cm">@* ItemSelect.razor *@</span>
+    <pre><code><span class="cm">@* ItemSelect.razor (manuell) *@</span>
 
 &lt;div class="mb-3"&gt;
     &lt;label class="form-label fw-bold"&gt;Item&lt;/label&gt;
@@ -225,7 +227,7 @@ private async Task HandleCategoryChanged(string category)
 <div class="page-footer">
   <a href="01b-select-bind.html">← Vorherige</a>
   <a href="index.html">Übersicht</a>
-  <a href="03-input-validation.html">Nächste →</a>
+  <a href="02b-nested-bind.html">Nächste →</a>
 </div>
 
 </div>

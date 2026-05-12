@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 02b — Gekaskadete Selects mit @bind</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="02a-nested-manuell.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="03-input-validation.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 02b</div>
+  <h1>Gekaskadete Selects mit <span class="hl">@bind</span></h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du löst dieselbe Aufgabe wie in <strong>02a</strong>, aber mit <code>@bind</code> und <code>@bind:after</code> in beiden Child-Komponenten. Du siehst, wie konsequenter <code>@bind</code>-Einsatz den Code in jeder Komponente schlanker macht.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>[Parameter]</code>
+    <code>EventCallback&lt;T&gt;</code>
+    <code>Parent→Child Datenfluss</code>
+    <code>Dictionary&lt;K,V&gt;</code>
+    <code>@bind</code>
+    <code>@bind:after</code>
+    <code>@key</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle zwei Komponenten: <code>CategorySelect.razor</code> (Kategorie-Auswahl) und <code>ItemSelect.razor</code> (Item-Auswahl).</li>
+    <li><span class="step">2.</span> <code>CategorySelect</code> gibt die gewählte Kategorie per <code>EventCallback&lt;string&gt;</code> nach oben – nutze <code>@bind:after</code>.</li>
+    <li><span class="step">3.</span> <code>ItemSelect</code> nimmt per <code>[Parameter]</code> eine Liste von Items entgegen und zeigt sie im Dropdown an – auch hier <code>@bind:after</code>.</li>
+    <li><span class="step">4.</span> Erstelle eine Parent-Seite, die beide Komponenten einbettet. Bei Kategorie-Wechsel wird die Item-Liste neu gesetzt.</li>
+    <li><span class="step">5.</span> Verwende ein <code>Dictionary&lt;string, List&lt;string&gt;&gt;</code> als Datenquelle.</li>
+    <li><span class="step">6.</span> Sorge dafür, dass bei Kategorie-Wechsel die Item-Auswahl zurückgesetzt wird.</li>
+  </ol>
+</div>
+
+<div class="box note">
+  <h2>📌 Der Unterschied zu 02a</h2>
+  <p>In <strong>02a</strong> nutzen beide Childs <code>@onchange</code> + <code>value</code> + <code>ChangeEventArgs</code>. Hier setzen beide auf <code>@bind</code> + <code>@bind:after</code> mit Inline-Lambda – weniger Boilerplate pro Komponente, gleiche Schnittstelle nach außen.</p>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Die wichtigsten Bausteine:</p>
+    <pre><code><span class="cm">// CategorySelect mit @bind:after:</span>
+&lt;select @bind="selectedCategory"
+        @bind:after="() => OnCategoryChanged.InvokeAsync(selectedCategory)"&gt;
+    ...
+&lt;/select&gt;
+
+<span class="cm">// ItemSelect mit @bind:after + Disabled:</span>
+&lt;select @bind="selectedItem"
+        @bind:after="() => OnItemSelected.InvokeAsync(selectedItem)"
+        disabled="@Disabled"&gt;
+    ...
+&lt;/select&gt;
+
+<span class="cm">// Parent bleibt gleich:</span>
+&lt;CategorySelect OnCategoryChanged="HandleCategoryChanged" /&gt;
+&lt;ItemSelect Items="@currentItems" OnItemSelected="HandleItemSelected"
+            Disabled="@string.IsNullOrEmpty(selectedCategory)"
+            @key="@selectedCategory" /&gt;</code></pre>
+    <p>💡 Die EventCallback-Schnittstelle ändert sich nicht – nur die interne Implementierung der Childs wird schlanker.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen in beiden Child-Komponenten:</p>
+    <pre><code><span class="cm">@* CategorySelect.razor *@</span>
+
+&lt;select class="form-select" @bind="selectedCategory" <span class="err">❌</span>&gt;
+    &lt;option value="" disabled selected&gt;Bitte wählen...&lt;/option&gt;
+    @foreach (var cat in categories)
+    {
+        &lt;option value="@cat"&gt;@cat&lt;/option&gt;
+    }
+&lt;/select&gt;
+
+@code {
+    [Parameter]
+    public EventCallback&lt;string&gt; OnCategoryChanged { get; set; }
+
+    private string selectedCategory = "";
+    private string[] categories = { "Ordinary", "Compressed", "Moon", "Compressed Moon" };
+}</code></pre>
+    <pre><code><span class="cm">@* ItemSelect.razor *@</span>
+
+&lt;select class="form-select" @bind="selectedItem" <span class="err">❌</span>
+        disabled="@Disabled"&gt;
+    &lt;option value="" disabled selected&gt;Bitte wählen...&lt;/option&gt;
+    @foreach (var item in Items)
+    {
+        &lt;option value="@item"&gt;@item&lt;/option&gt;
+    }
+&lt;/select&gt;
+
+@code {
+    [Parameter]
+    public List&lt;string&gt; Items { get; set; } = new();
+    [Parameter]
+    public bool Disabled { get; set; }
+    [Parameter]
+    public EventCallback&lt;string&gt; OnItemSelected { get; set; }
+
+    private string selectedItem = "";
+}</code></pre>
+    <p>📌 <strong>Fehlend:</strong> Jeweils <code>@bind:after="() => On...InvokeAsync(...)"</code> im <code>&lt;select&gt;</code>.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">@* CategorySelect.razor *@</span>
+
+&lt;div class="mb-3"&gt;
+    &lt;label class="form-label fw-bold"&gt;Kategorie&lt;/label&gt;
+    &lt;select class="form-select" @bind="selectedCategory"
+            @bind:after="() => OnCategoryChanged.InvokeAsync(selectedCategory)"&gt;
+        &lt;option value="" disabled selected&gt;Bitte wählen...&lt;/option&gt;
+        @foreach (var cat in categories)
+        {
+            &lt;option value="@cat"&gt;@cat&lt;/option&gt;
+        }
+    &lt;/select&gt;
+&lt;/div&gt;
+
+@code {
+    [Parameter]
+    public EventCallback&lt;string&gt; OnCategoryChanged { get; set; }
+
+    private string selectedCategory = "";
+    private string[] categories = { "Ordinary", "Compressed", "Moon", "Compressed Moon" };
+}</code></pre>
+    <pre><code><span class="cm">@* ItemSelect.razor *@</span>
+
+&lt;div class="mb-3"&gt;
+    &lt;label class="form-label fw-bold"&gt;Item&lt;/label&gt;
+    &lt;select class="form-select" @bind="selectedItem"
+            @bind:after="() => OnItemSelected.InvokeAsync(selectedItem)"
+            disabled="@Disabled"&gt;
+        &lt;option value="" disabled selected&gt;Bitte wählen...&lt;/option&gt;
+        @foreach (var item in Items)
+        {
+            &lt;option value="@item"&gt;@item&lt;/option&gt;
+        }
+    &lt;/select&gt;
+&lt;/div&gt;
+
+@code {
+    [Parameter]
+    public List&lt;string&gt; Items { get; set; } = new();
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public EventCallback&lt;string&gt; OnItemSelected { get; set; }
+
+    private string selectedItem = "";
+}</code></pre>
+    <p><strong>Parent-Seite:</strong></p>
+    <pre><code><span class="cm">@* CascadingSelectPage.razor *@</span>
+
+&lt;CategorySelect OnCategoryChanged="HandleCategoryChanged" /&gt;
+&lt;ItemSelect Items="@currentItems" Disabled="@string.IsNullOrEmpty(selectedCategory)"
+            OnItemSelected="HandleItemSelected" @key="@selectedCategory" /&gt;
+
+@if (selectedItem != null)
+{
+    &lt;p&gt;Auswahl: @selectedCategory → @selectedItem&lt;/p&gt;
+}
+
+@code {
+    private string selectedCategory = "";
+    private string? selectedItem;
+    private List&lt;string&gt; currentItems = new();
+
+    private Dictionary&lt;string, List&lt;string&gt;&gt; data = new()
+    {
+        ["Ordinary"] = new() { "Veldspar", "Scordite", "Pyroxeres", "Plagioclase" },
+        ["Compressed"] = new() { "Compressed Veldspar", "Compressed Scordite" },
+    };
+
+    private async Task HandleCategoryChanged(string category)
+    {
+        selectedCategory = category;
+        currentItems = data.GetValueOrDefault(category, new());
+        selectedItem = null;
+    }
+
+    private void HandleItemSelected(string item)
+    {
+        selectedItem = item;
+        Console.WriteLine($"Item: {item}");
+    }
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li>Die Parent-Seite bleibt identisch zu 02a – nur die Childs werden mit <code>@bind</code> schlanker.</li>
+    <li><code>@bind:after</code> feuert nach jeder Aktualisierung – auch bei leerer Auswahl. Das ist hier OK, weil der Parent ohnehin auf gültige Werte reagiert.</li>
+    <li><code>@key</code> auf <code>ItemSelect</code> sorgt dafür, dass Blazor die Komponente bei Kategorie-Wechsel neu aufbaut und der interne State (<code>selectedItem</code>) zurückgesetzt wird.</li>
+    <li>Vergleiche die Code-Menge von CategorySelect in 02a vs. 02b – ~50% weniger.</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Kategorie-Dropdown zeigt alle Kategorien an</li>
+    <li>Item-Dropdown zeigt nur Items der gewählten Kategorie</li>
+    <li>Bei Kategorie-Wechsel wird die Item-Auswahl zurückgesetzt</li>
+    <li>Item-Dropdown ist deaktiviert, solange keine Kategorie gewählt ist</li>
+    <li>Die Auswahl beider Dropdowns wird auf der Seite angezeigt</li>
+    <li>Beide Childs verwenden <code>@bind</code> + <code>@bind:after</code> – kein manuelles <code>@onchange</code></li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="02a-nested-manuell.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="03-input-validation.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>
