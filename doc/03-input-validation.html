@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 03 — Input mit Validierung</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="02-select-nested.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="04-dual-input.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 03</div>
+  <h1>Input mit Validierung</h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du erstellst ein numerisches Eingabefeld mit eigener Validierung. Du lernst, wie man Eingaben parst, Fehlerzustände verwaltet und sie benutzerfreundlich anzeigt – ohne <code>EditForm</code>, nur mit manuellem State.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>&lt;input type="number"&gt;</code>
+    <code>long.TryParse</code>
+    <code>Conditional Rendering</code>
+    <code>Error State</code>
+    <code>EventCallback&lt;long&gt;</code>
+    <code>[Parameter] Disabled</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle die Komponente <code>QuantityInput.razor</code> mit einem <code>&lt;input type="number"&gt;</code>.</li>
+    <li><span class="step">2.</span> Bei jeder Eingabe (<code>@oninput</code>) parst du den Wert mit <code>long.TryParse()</code>. Ist der Wert ungültig (keine Zahl, &le; 0), setzt du einen Error-String.</li>
+    <li><span class="step">3.</span> Zeige den Error-String als rote Meldung <strong>nur</strong> an, wenn ein Fehler vorliegt (Conditional Rendering mit <code>@if</code>).</li>
+    <li><span class="step">4.</span> Gib den gültigen Zahlenwert per <code>EventCallback&lt;long&gt;</code> nach oben. Bei ungültiger Eingabe feuere kein Event.</li>
+    <li><span class="step">5.</span> Füge einen <code>[Parameter] bool Disabled</code> hinzu. Wenn <code>true</code>, wird das Input-Feld deaktiviert.</li>
+    <li><span class="step">6.</span> Bonus: Füge einen <code>[Parameter] string Label</code> und einen <code>[Parameter] long MinValue</code> hinzu, um die Komponente allgemein nutzbar zu machen.</li>
+  </ol>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Die wichtigsten Bausteine:</p>
+    <pre><code><span class="cm">// @oninput = feuert bei jedem Tastendruck:</span>
+&lt;input type="number"
+       <span class="hl">@oninput="HandleInput"</span>
+       value="@inputValue"
+       disabled="@Disabled" /&gt;
+
+<span class="cm">// TryParse in Blazor (e.Value ist string):</span>
+private void HandleInput(ChangeEventArgs e)
+{
+    var raw = e.Value?.ToString() ?? "";
+    if (<span class="hl">long.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var val)</span>)
+    {
+        <span class="cm">// gültig</span>
+    }
+    else
+    {
+        <span class="cm">// Fehler setzen</span>
+    }
+}
+
+<span class="cm">// Conditional Rendering für Fehler:</span>
+@if (<span class="hl">!string.IsNullOrEmpty(errorMessage)</span>)
+{
+    &lt;div class="text-danger"&gt;@errorMessage&lt;/div&gt;
+}
+
+<span class="cm">// EventCallback nur bei gültigem Wert feuern:</span>
+if (isValid)
+    await <span class="hl">OnQuantityChanged.InvokeAsync(parsedValue)</span>;</code></pre>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen:</p>
+    <pre><code><span class="cm">@* QuantityInput.razor *@</span>
+
+&lt;div class="mb-3"&gt;
+    &lt;label class="form-label fw-bold"&gt;@Label&lt;/label&gt;
+    &lt;input type="number"
+           class="form-control @(<span class="err">❌</span> ? "is-invalid" : "")"
+           @oninput="HandleInput"
+           value="@inputValue"
+           disabled="@Disabled" /&gt;
+    @if (<span class="err">❌</span>)
+    {
+        &lt;div class="text-danger small"&gt;@errorMessage&lt;/div&gt;
+    }
+&lt;/div&gt;
+
+@code {
+    [Parameter] public string Label { get; set; } = "Menge";
+    [Parameter] public long MinValue { get; set; } = 1;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback&lt;long&gt; OnQuantityChanged { get; set; }
+
+    private string inputValue = "";
+    private string? errorMessage;
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString() ?? "";
+        inputValue = raw;
+
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            errorMessage = "Feld darf nicht leer sein";
+            return;
+        }
+
+        if (<span class="err">❌</span>) <span class="cm">// TryParse missing</span>
+        {
+            errorMessage = "Bitte eine gültige Zahl eingeben";
+            return;
+        }
+
+        var val = long.Parse(raw);
+        if (val &lt; MinValue)
+        {
+            errorMessage = $"Wert muss &gt;= {MinValue} sein";
+            return;
+        }
+
+        errorMessage = null;
+        await <span class="err">❌</span> <span class="cm">// Callback fehlt</span>
+    }
+}</code></pre>
+    <p>📌 <strong>Fehlend:</strong> (1) Bedingung für CSS-Klasse <code>is-invalid</code>. (2) <code>long.TryParse(...)</code>-Aufruf. (3) <code>OnQuantityChanged.InvokeAsync(val)</code>.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">@* QuantityInput.razor *@</span>
+
+&lt;div class="mb-3"&gt;
+    &lt;label class="form-label fw-bold"&gt;@Label&lt;/label&gt;
+    &lt;input type="number"
+           class="form-control @(!string.IsNullOrEmpty(errorMessage) ? "is-invalid" : "")"
+           @oninput="HandleInput"
+           value="@inputValue"
+           disabled="@Disabled"
+           min="@MinValue" /&gt;
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        &lt;div class="text-danger small mt-1"&gt;@errorMessage&lt;/div&gt;
+    }
+&lt;/div&gt;
+
+@code {
+    [Parameter] public string Label { get; set; } = "Menge";
+    [Parameter] public long MinValue { get; set; } = 1;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback&lt;long&gt; OnQuantityChanged { get; set; }
+
+    private string inputValue = "";
+    private string? errorMessage;
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString() ?? "";
+        inputValue = raw;
+
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            errorMessage = "Feld darf nicht leer sein";
+            return;
+        }
+
+        if (!long.TryParse(raw, NumberStyles.Integer,
+            CultureInfo.InvariantCulture, out var val))
+        {
+            errorMessage = "Bitte eine gültige ganze Zahl eingeben";
+            return;
+        }
+
+        if (val &lt; MinValue)
+        {
+            errorMessage = $"Wert muss &gt;= {MinValue} sein";
+            return;
+        }
+
+        errorMessage = null;
+        await OnQuantityChanged.InvokeAsync(val);
+    }
+}</code></pre>
+    <pre><code><span class="cm">@* QuantityInput.razor.css *@</span>
+::deep .is-invalid {
+    border-color: #dc3545;
+}
+::deep .is-invalid:focus {
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li><code>@oninput</code> feuert bei jedem Tastendruck, <code>@onchange</code> erst beim Verlassen des Feldes. Für Live-Validierung nimm <code>@oninput</code>.</li>
+    <li>Blazor parst <code>event.args.Value</code> als <code>string</code>. Du musst selbst parsen.</li>
+    <li>Ein leeres Feld ist auch ein Sonderfall: Soll es erlaubt sein oder ein Fehler?</li>
+    <li>Zusätzlich zur Textmeldung: Füge eine CSS-Klasse <code>invalid</code> hinzu, die das Feld rot umrandet.</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Akzeptiert nur positive ganze Zahlen &gt; 0</li>
+    <li>Zeigt eine rote Fehlermeldung bei leerem Feld, 0 oder negativen Werten</li>
+    <li>Blockiert die Weitergabe des Wertes bei ungültiger Eingabe</li>
+    <li>Das Feld kann von außen deaktiviert werden</li>
+    <li>Das Feld hat eine rote Umrandung bei Fehler (CSS-Klasse <code>.invalid</code>)</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="02-select-nested.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="04-dual-input.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>

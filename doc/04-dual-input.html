@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 04 — Gekoppelte Inputs</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="03-input-validation.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="05-table-einfach.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 04</div>
+  <h1>Gekoppelte Inputs (Slider + Number)</h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du kombinierst zwei verschiedene Input-Typen – einen <code>&lt;input type="range"&gt;</code> (Slider) und ein <code>&lt;input type="number"&gt;</code> – die denselben Wert steuern. Änderung am einen aktualisiert sofort den andere. Du lernst bidirektionale Synchronisation ohne <code>@bind</code> umzusetzen.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>&lt;input type="range"&gt;</code>
+    <code>@oninput</code>
+    <code>Bidirektionale Sync</code>
+    <code>Math.Round</code>
+    <code>[Parameter] Min/Max/Step</code>
+    <code>EventCallback&lt;decimal&gt;</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle <code>DualInput.razor</code> mit einem Slider und einem Number-Input nebeneinander.</li>
+    <li><span class="step">2.</span> Beide Inputs binden an dieselbe <code>decimal value</code>-Variable. Änderung im Slider aktualisiert das Number-Feld und umgekehrt.</li>
+    <li><span class="step">3.</span> Verwende <code>@oninput</code> für den Slider (flüssige Bewegung) und <code>@onchange</code> für das Number-Feld (Präzisionseingabe).</li>
+    <li><span class="step">4.</span> Füge <code>[Parameter]</code> für <code>Min</code>, <code>Max</code> und <code>Step</code> hinzu, damit die Komponente flexibel bleibt.</li>
+    <li><span class="step">5.</span> Gib den Wert per <code>EventCallback&lt;decimal&gt;</code> nach oben.</li>
+    <li><span class="step">6.</span> Zeige den aktuellen Wert in Prozent-Format (<code>"42,5 %"</code>) zwischen den beiden Inputs an.</li>
+  </ol>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Die wichtigsten Bausteine:</p>
+    <pre><code><span class="cm">// Slider (range) mit @oninput für Echtzeit:</span>
+&lt;input type="range"
+       <span class="hl">@oninput="HandleSliderChange"</span>
+       value="@currentValue"
+       min="@Min" max="@Max" step="@Step" /&gt;
+
+<span class="cm">// Number-Input mit @onchange für Präzision:</span>
+&lt;input type="number"
+       <span class="hl">@onchange="HandleNumberChange"</span>
+       value="@currentValue"
+       min="@Min" max="@Max" /&gt;
+
+<span class="cm">// Wert-Anzeige:</span>
+&lt;span&gt;<span class="hl">@currentValue.ToString("F1") %</span>&lt;/span&gt;
+
+<span class="cm">// Bidirektionale Synchronisation:</span>
+private async Task HandleSliderChange(ChangeEventArgs e)
+{
+    <span class="hl">currentValue</span> = Convert.ToDecimal(e.Value, CultureInfo.InvariantCulture);
+    <span class="cm">// Nicht erneut feuern, wenn nichts geändert</span>
+}
+
+private async Task HandleNumberChange(ChangeEventArgs e)
+{
+    if (decimal.TryParse(e.Value?.ToString(), ...))
+        currentValue = ...;
+    await <span class="hl">OnValueChanged.InvokeAsync(currentValue)</span>;
+}</code></pre>
+    <p>💡 <strong>Endlos-Schleifen vermeiden:</strong> Prüfe vor <code>InvokeAsync</code>, ob sich der Wert wirklich geändert hat.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen:</p>
+    <pre><code><span class="cm">@* DualInput.razor *@</span>
+
+&lt;div class="d-flex align-items-center gap-3"&gt;
+    &lt;input type="range"
+           class="form-range flex-grow-1"
+           @oninput="HandleSliderChange"
+           value="@currentValue"
+           min="@Min" max="@Max" step="@Step" /&gt;
+
+    &lt;span class="fw-bold text-nowrap" style="width: 80px;"&gt;
+        @currentValue.ToString("F1") %
+    &lt;/span&gt;
+
+    &lt;input type="number"
+           class="form-control" style="width: 100px;"
+           @onchange="HandleNumberChange"
+           value="@currentValue"
+           min="@Min" max="@Max" /&gt;
+&lt;/div&gt;
+
+@code {
+    [Parameter] public decimal Min { get; set; } = 0;
+    [Parameter] public decimal Max { get; set; } = 100;
+    [Parameter] public decimal Step { get; set; } = 1;
+    [Parameter] public EventCallback&lt;decimal&gt; OnValueChanged { get; set; }
+
+    private decimal currentValue = 0;
+    private decimal previousValue = 0;
+
+    private async Task HandleSliderChange(ChangeEventArgs e)
+    {
+        currentValue = <span class="err">❌</span> <span class="cm">// Convert.ToDecimal</span>
+        await TryFireCallback();
+    }
+
+    private async Task HandleNumberChange(ChangeEventArgs e)
+    {
+        if (<span class="err">❌</span>) <span class="cm">// decimal.TryParse</span>
+        {
+            currentValue = val;
+            await TryFireCallback();
+        }
+    }
+
+    private async Task TryFireCallback()
+    {
+        if (currentValue != previousValue)
+        {
+            previousValue = currentValue;
+            await <span class="err">❌</span> <span class="cm">// Callback</span>
+        }
+    }
+}</code></pre>
+    <p>📌 <strong>Fehlend:</strong> (1) <code>Convert.ToDecimal(e.Value, CultureInfo.InvariantCulture)</code>. (2) <code>decimal.TryParse(..., out var val)</code>. (3) <code>OnValueChanged.InvokeAsync(currentValue)</code>.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">@* DualInput.razor *@</span>
+
+&lt;div class="d-flex align-items-center gap-3"&gt;
+    &lt;input type="range"
+           class="form-range flex-grow-1"
+           @oninput="HandleSliderChange"
+           value="@currentValue"
+           min="@Min" max="@Max" step="@Step" /&gt;
+
+    &lt;span class="fw-bold text-nowrap text-center" style="min-width: 80px;"&gt;
+        @currentValue.ToString("F1") %
+    &lt;/span&gt;
+
+    &lt;input type="number"
+           class="form-control" style="width: 100px;"
+           @onchange="HandleNumberChange"
+           value="@currentValue"
+           min="@Min" max="@Max" /&gt;
+&lt;/div&gt;
+
+@code {
+    [Parameter] public decimal Min { get; set; } = 0;
+    [Parameter] public decimal Max { get; set; } = 100;
+    [Parameter] public decimal Step { get; set; } = 1;
+    [Parameter] public EventCallback&lt;decimal&gt; OnValueChanged { get; set; }
+
+    private decimal currentValue = 0;
+    private decimal previousValue = 0;
+
+    private async Task HandleSliderChange(ChangeEventArgs e)
+    {
+        currentValue = Convert.ToDecimal(e.Value, CultureInfo.InvariantCulture);
+        await TryFireCallback();
+    }
+
+    private async Task HandleNumberChange(ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString() ?? "";
+        if (decimal.TryParse(raw, NumberStyles.Any,
+            CultureInfo.InvariantCulture, out var val))
+        {
+            currentValue = Math.Round(val, 1);
+            await TryFireCallback();
+        }
+    }
+
+    private async Task TryFireCallback()
+    {
+        if (currentValue != previousValue)
+        {
+            previousValue = currentValue;
+            await OnValueChanged.InvokeAsync(currentValue);
+        }
+    }
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li>Achte auf Rundung: Der Slider liefert <code>double</code>, das Number-Feld <code>decimal</code>. Verwende <code>Math.Round</code> mit passender Genauigkeit.</li>
+    <li>Slider <code>step</code> sollte gröber sein (z.B. 1), das Number-Feld erlaubt beliebige Werte.</li>
+    <li>Vermeide Endlos-Schleifen: Wenn sich der Wert durch eine UI-Änderung nicht geändert hat, feuere kein <code>EventCallback</code>.</li>
+    <li>Setze <code>min</code>/<code>max</code> auch als HTML-Attribute, damit der Browser den Slider korrekt skaliert.</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Slider und Number-Feld zeigen immer denselben Wert an</li>
+    <li>Slider-Bewegung aktualisiert das Number-Feld in Echtzeit</li>
+    <li>Number-Eingabe aktualisiert den Slider (ggf. gerundet auf Step)</li>
+    <li>Min, Max und Step sind per Parameter konfigurierbar</li>
+    <li>Der Wert wird als formatierter String (z.B. "42,0 %") angezeigt</li>
+    <li>Wert-Änderungen werden per EventCallback nach oben gemeldet</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="03-input-validation.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="05-table-einfach.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>

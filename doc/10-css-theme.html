@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 10 — CSS-Techniken & Theme</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="09-component-state.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="#" class="disabled">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 10</div>
+  <h1>CSS-Techniken &amp; Theme</h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du optimierst das visuelle Erscheinungsbild der Anwendung. Du lernst Blazors Scoped CSS (CSS Isolation), den <code>::deep</code>-Pseudo-Selektor, die Implementierung eines Dark/Light-Mode-Wechsels und responsive Breakpoints.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>.razor.css (Scoped CSS)</code>
+    <code>::deep</code>
+    <code>data-bs-theme</code>
+    <code>CSS-Variablen (custom properties)</code>
+    <code>@media (prefers-color-scheme)</code>
+    <code>@media (max-width)</code>
+    <code>JSInterop für localStorage</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle für <strong>jede</strong> deiner Komponenten eine Scoped CSS-Datei (<code>Komponente.razor.css</code>). Verschiebe komponenten-spezifische Styles aus globalem CSS dorthin.</li>
+    <li><span class="step">2.</span> Nutze <code>::deep</code> in einer Parent-Komponente, um das Styling einer Child-Komponente zu beeinflussen (z.B. alle Tabellen in einer Card einheitlich formatieren).</li>
+    <li><span class="step">3.</span> Implementiere einen Dark/Light-Mode-Button:
+      <ul>
+        <li>Ein Button in der Seitenleiste ruft per <code>IJSRuntime.InvokeVoidAsync("toggleTheme")</code> eine JS-Funktion auf.</li>
+        <li>Die JS-Funktion setzt <code>data-bs-theme="dark"</code> aufs <code>&lt;html&gt;</code>-Element und speichert die Präferenz in <code>localStorage</code>.</li>
+      </ul>
+    </li>
+    <li><span class="step">4.</span> Ergänze benutzerdefinierte CSS-Variablen für Dark Mode (z.B. andere Sidebar-Hintergrundfarbe, andere Card-Schatten).</li>
+    <li><span class="step">5.</span> Mache die Sidebar responsiv: Unter 640px Breite wird sie zu einem Hamburger-Menü, das sich über den Content legt.</li>
+    <li><span class="step">6.</span> Bonus: Füge <code>prefers-color-scheme</code> als Standard hinzu, damit der Dark Mode automatisch der Betriebssystem-Einstellung folgt.</li>
+  </ol>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Die wichtigsten Bausteine:</p>
+    <pre><code><span class="cm">// Scoped CSS (NavMenu.razor.css):</span>
+<span class="hl">::deep</span> .nav-link {
+    color: var(--text-muted);
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+
+::deep .nav-link.active {
+    color: var(--accent);
+    background: var(--accent-light);
+}
+
+<span class="cm">// CSS-Variablen für Dark Mode:</span>
+:root {
+    --sidebar-bg: #f8f9fa;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+[data-bs-theme="dark"] {
+    --sidebar-bg: #212529;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+<span class="cm">// JS-Interop für Theme-Toggle (wwwroot/js/theme.js):</span>
+window.toggleTheme = function () {
+    var html = document.documentElement;
+    var current = html.getAttribute('data-bs-theme') || 'light';
+    var next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-bs-theme', next);
+    localStorage.setItem('theme', next);
+};
+
+window.applyTheme = function () {
+    var saved = localStorage.getItem('theme');
+    if (saved) {
+        document.documentElement.setAttribute('data-bs-theme', saved);
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+    }
+};
+
+<span class="cm">// Blazor-Seite ruft JS auf:</span>
+@inject IJSRuntime JS
+
+&lt;button @onclick="ToggleTheme"&gt;🌓 Theme&lt;/button&gt;
+
+@code {
+    private async Task ToggleTheme()
+    {
+        await JS.InvokeVoidAsync("toggleTheme");
+    }
+}</code></pre>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen:</p>
+    <pre><code><span class="cm">// MainLayout.razor.css (Scoped CSS für das Layout)</span>
+.sidebar {
+    width: 250px;
+    background: var(--sidebar-bg);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    transition: transform 0.3s;
+}
+
+.top-row {
+    margin-left: 250px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+article {
+    margin-left: 250px;
+    padding: 20px;
+}
+
+<span class="err">❌</span> <span class="cm">// Responsive: unter 640px klappt Sidebar ein</span>
+@media (max-width: 640px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .top-row, article {
+        margin-left: 0;
+    }
+}</code></pre>
+    <pre><code><span class="cm">// NavMenu.razor – Theme-Button und Hamburger einbauen</span>
+&lt;nav&gt;
+    &lt;div class="hamburger" @onclick="ToggleNav"&gt;
+        ☰
+    &lt;/div&gt;
+
+    &lt;NavLink href=""&gt;Home&lt;/NavLink&gt;
+    &lt;NavLink href="calculator"&gt;Calculator&lt;/NavLink&gt;
+
+    &lt;button @onclick="ToggleTheme"&gt;
+        🌓 @(isDark ? "Dark" : "Light")
+    &lt;/button&gt;
+&lt;/nav&gt;
+
+@code {
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+    private bool isDark;
+
+    private async Task ToggleTheme()
+    {
+        <span class="err">❌</span> <span class="cm">// JS aufrufen</span>
+        isDark = !isDark;
+    }
+
+    private void ToggleNav()
+    {
+        <span class="err">❌</span> <span class="cm">// Sidebar-Klasse togglen</span>
+    }
+}</code></pre>
+    <p>📌 <strong>Fehlend:</strong> (1) Media-Query-Block korrekt einfügen (s.o.). (2) <code>await JS.InvokeVoidAsync("toggleTheme")</code>. (3) <code>navOpen = !navOpen</code> + CSS-Klasse per <code>@navOpen</code> setzen.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">// wwwroot/js/theme.js</span>
+window.toggleTheme = function () {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-bs-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-bs-theme', next);
+    localStorage.setItem('theme', next);
+};
+
+window.applyTheme = function () {
+    const saved = localStorage.getItem('theme');
+    if (saved) {
+        document.documentElement.setAttribute('data-bs-theme', saved);
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+    }
+};
+
+window.addEventListener('DOMContentLoaded', window.applyTheme);</code></pre>
+    <pre><code><span class="cm">// NavMenu.razor (Auszug)</span>
+@inject IJSRuntime JS
+
+&lt;nav class="flex-column"&gt;
+    &lt;div class="d-md-none text-end p-2"&gt;
+        &lt;button class="btn btn-sm btn-outline-secondary"
+                @onclick="ToggleNav"&gt;
+            ☰
+        &lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;div class="@(navOpen ? "d-block" : "d-none d-md-block")"&gt;
+        &lt;NavLink class="nav-link" href="" Match="NavLinkMatch.All"&gt;
+            🏠 Home
+        &lt;/NavLink&gt;
+        &lt;NavLink class="nav-link" href="calculator"&gt;
+            📊 Calculator
+        &lt;/NavLink&gt;
+
+        &lt;button class="btn btn-sm btn-outline-secondary mt-2 w-100"
+                @onclick="ToggleTheme"&gt;
+            🌓 @(isDark ? "Dark" : "Light") Mode
+        &lt;/button&gt;
+    &lt;/div&gt;
+&lt;/nav&gt;
+
+@code {
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+    private bool isDark;
+    private bool navOpen;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var saved = await JS.InvokeAsync&lt;string&gt;("localStorage.getItem", "theme");
+            isDark = saved == "dark";
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        await JS.InvokeVoidAsync("toggleTheme");
+        isDark = !isDark;
+    }
+
+    private void ToggleNav()
+    {
+        navOpen = !navOpen;
+    }
+}</code></pre>
+    <pre><code><span class="cm">// MainLayout.razor.css</span>
+.sidebar {
+    width: 250px;
+    min-height: 100vh;
+    background: var(--sidebar-bg, #f8f9fa);
+    border-right: 1px solid var(--border, #dee2e6);
+    transition: transform 0.3s ease;
+}
+
+.top-row {
+    border-bottom: 1px solid var(--border, #dee2e6);
+    padding: 12px 20px;
+}
+
+article {
+    padding: 24px;
+}
+
+@media (max-width: 640px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+}
+
+@media (min-width: 641px) {
+    .sidebar {
+        transform: none !important;
+    }
+}
+
+::deep .card {
+    box-shadow: var(--card-shadow, 0 1px 3px rgba(0,0,0,0.12));
+}
+
+::deep .table {
+    font-size: 0.9rem;
+}</code></pre>
+    <pre><code><span class="cm">// site.css – CSS-Variablen global definieren</span>
+:root {
+    --sidebar-bg: #f8f9fa;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    --border: #dee2e6;
+}
+
+[data-bs-theme="dark"] {
+    --sidebar-bg: #212529;
+    --card-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    --border: #495057;
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li>Scoped CSS-Dateien heißen genau wie die <code>.razor</code>-Datei, mit angehängtem <code>.css</code> (z.B. <code>NavMenu.razor.css</code>).</li>
+    <li><code>::deep</code> ist Blazors Äquivalent zu "durchreichenden" Styles. Syntax: <code>::deep .meine-klasse { ... }</code>.</li>
+    <li>Bootstrap 5.3+ unterstützt <code>data-bs-theme="dark"</code> nativ. Kein separater Dark-Mode-CSS mehr nötig – nur eigene Overrides.</li>
+    <li>CSS-Variablen im <code>:root</code>-Selektor definieren, im Dark Mode mittels <code>[data-bs-theme="dark"]</code> überschreiben.</li>
+    <li>Responsive Breakpoints immer mobil zuerst denken: <code>@media (min-width: 641px)</code> für Desktop-Regeln.</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Jede Komponente hat eine eigene Scoped CSS-Datei</li>
+    <li>::deep wird an mindestens einer Stelle verwendet</li>
+    <li>Dark/Light Mode kann per Button umgeschaltet werden</li>
+    <li>Die Präferenz bleibt nach Seitenneuladung erhalten (localStorage)</li>
+    <li>Sidebar ist unter 640px mobil nutzbar (Hamburger + Overlay)</li>
+    <li>CSS-Variablen für konsistente Farben im Dark Mode</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="09-component-state.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="#" class="disabled">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 09 — Component State</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="08-api-httpclient.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="10-css-theme.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 09</div>
+  <h1>Component State &amp; Kommunikation</h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du kombinierst alle bisherigen Komponenten zu einer funktionsfähigen Seite. Du lernst das "Controller"-Pattern: Eine Parent-Komponente hält den gesamten State und verteilt ihn per <code>[Parameter]</code> an Child-Komponenten. Änderungen in den Kindern werden per <code>EventCallback</code> zurückgemeldet.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>[Parameter]</code>
+    <code>EventCallback&lt;T&gt;</code>
+    <code>Parent→Child Datenfluss</code>
+    <code>Controller-Komponente</code>
+    <code>State orchestrieren</code>
+    <code>@if / Loading / Error</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle eine Seite <code>Calculator.razor</code> – sie ist der "Controller". Sie hält: <code>selectedItem</code>, <code>quantity</code>, <code>fee</code>, <code>result</code>, <code>isLoading</code>, <code>errorMessage</code>.</li>
+    <li><span class="step">2.</span> Baue die Komponenten aus den vorherigen Aufgaben in die Seite ein:
+      <ul>
+        <li>Ein gekaskadetes Select (Aufgabe 02) für Kategorie + Item</li>
+        <li>Ein QuantityInput (Aufgabe 03) für die Menge</li>
+        <li>Ein DualInput (Aufgabe 04) für die Gebühr</li>
+        <li>Eine Tabelle (Aufgabe 05/06) für Ergebnisse</li>
+      </ul>
+    </li>
+    <li><span class="step">3.</span> Verdrahte die <code>EventCallback</code>s der Kinder mit Handler-Methoden in <code>Calculator.razor</code>.</li>
+    <li><span class="step">4.</span> Wenn Item, Menge und Gebühr gültig sind, berechne (oder rufe API auf) und setze <code>result</code>.</li>
+    <li><span class="step">5.</span> Zeige während der Berechnung einen Spinner (<code>isLoading</code>). Bei Fehler eine rote Meldung (<code>errorMessage</code>).</li>
+    <li><span class="step">6.</span> Der "Berechnen"-Button ist deaktiviert, solange nicht alle Eingaben gültig sind.</li>
+    <li><span class="step">7.</span> Sorge dafür, dass bei Änderung einer Eingabe das vorherige Ergebnis zurückgesetzt wird.</li>
+  </ol>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Die wichtigsten Bausteine:</p>
+    <pre><code><span class="cm">// Controller-Seite – alle Child-Komponenten eingebettet:</span>
+&lt;CategorySelect OnCategoryChanged="@HandleCategoryChanged" /&gt;
+&lt;ItemSelect Items="@currentItems" Disabled="@..."
+            OnItemSelected="@HandleItemSelected" /&gt;
+&lt;QuantityInput OnQuantityChanged="@HandleQuantityChanged"
+               Disabled="@(selectedItem == null)" /&gt;
+&lt;DualInput OnValueChanged="@HandleFeeChanged" /&gt;
+
+&lt;button @onclick="CalculateAsync"
+        <span class="hl">disabled="@(!canCalculate)"</span>&gt;
+    Berechnen
+&lt;/button&gt;
+
+<span class="cm">// Button ist deaktiviert, solange nicht alle Eingaben gültig:</span>
+private bool canCalculate =&gt;
+    selectedItem != null &amp;&amp; quantity &gt; 0 &amp;&amp; fee &gt;= 0;
+
+<span class="cm">// Ergebnis zurücksetzen bei neuer Eingabe:</span>
+private async Task HandleItemSelected(string item)
+{
+    selectedItem = item;
+    <span class="hl">result = null;</span> <span class="cm">// Altes Ergebnis löschen</span>
+}
+
+<span class="cm">// Async Calculation mit Loading-State:</span>
+private async Task CalculateAsync()
+{
+    isLoading = true;
+    errorMessage = null;
+    try
+    {
+        result = await <span class="hl">someService.CalculateAsync(...)</span>;
+    }
+    catch (Exception ex)
+    {
+        errorMessage = ex.Message;
+    }
+    finally
+    {
+        isLoading = false;
+    }
+}</code></pre>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen:</p>
+    <pre><code><span class="cm">@* Calculator.razor *@</span>
+@page "/calculator"
+
+&lt;h3&gt;Calculator&lt;/h3&gt;
+
+&lt;div class="row"&gt;
+    &lt;div class="col-md-6"&gt;
+        &lt;CategorySelect OnCategoryChanged="HandleCategoryChanged" /&gt;
+        &lt;ItemSelect Items="@currentItems"
+                    Disabled="@(selectedCategory == null)"
+                    OnItemSelected="HandleItemSelected"
+                    @key="@selectedCategory" /&gt;
+        &lt;QuantityInput OnQuantityChanged="HandleQuantityChanged"
+                       Disabled="@(selectedItem == null)" /&gt;
+        &lt;DualInput OnValueChanged="HandleFeeChanged" /&gt;
+
+        &lt;button class="btn btn-primary w-100 mt-3"
+                @onclick="CalculateAsync"
+                disabled="@(<span class="err">❌</span>)"&gt;
+            @(isLoading ? "Berechne..." : "Berechnen")
+        &lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;div class="col-md-6"&gt;
+        @if (isLoading)
+        {
+            &lt;div class="text-center py-4"&gt;
+                &lt;span class="spinner-border"&gt;&lt;/span&gt;
+            &lt;/div&gt;
+        }
+        else if (errorMessage != null)
+        {
+            &lt;div class="alert alert-danger"&gt;@errorMessage&lt;/div&gt;
+        }
+        else if (result != null)
+        {
+            &lt;OrderTable Title="Ergebnis" Orders="@result.Orders" /&gt;
+        }
+    &lt;/div&gt;
+&lt;/div&gt;
+
+@code {
+    private string? selectedCategory;
+    private string? selectedItem;
+    private List&lt;string&gt; currentItems = new();
+    private long quantity;
+    private decimal fee;
+    private CalculationResult? result;
+    private bool isLoading;
+    private string? errorMessage;
+
+    private bool canCalculate =&gt; <span class="err">❌</span>; <span class="cm">// Bedingung</span>
+
+    private async Task HandleCategoryChanged(string cat)
+    {
+        selectedCategory = cat;
+        currentItems = /* Datenquelle... */;
+        selectedItem = null;
+        <span class="err">❌</span> <span class="cm">// Ergebnis zurücksetzen</span>
+    }
+
+    private void HandleItemSelected(string item)
+    {
+        selectedItem = item;
+        result = null;
+    }
+
+    private void HandleQuantityChanged(long val)
+    {
+        quantity = val;
+        result = null;
+    }
+
+    private void HandleFeeChanged(decimal val)
+    {
+        fee = val;
+        result = null;
+    }
+
+    private async Task CalculateAsync()
+    {
+        <span class="err">❌</span> <span class="cm">// Loading, try/catch, Berechnung</span>
+    }
+}</code></pre>
+    <p>📌 <strong>Fehlend:</strong> (1) <code>!canCalculate</code> oder <code>selectedItem == null || quantity == 0</code>. (2) <code>result = null</code>. (3) Komplette <code>CalculateAsync</code>-Methode mit try/catch, loading-State, API-Aufruf.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">// CalculationResult.cs</span>
+public class CalculationResult
+{
+    public string ItemName { get; set; } = "";
+    public long Quantity { get; set; }
+    public decimal TotalPrice { get; set; }
+    public decimal Fee { get; set; }
+    public decimal NetPrice { get; set; }
+    public List&lt;Order&gt; Orders { get; set; } = new();
+}</code></pre>
+    <pre><code><span class="cm">@* Calculator.razor *@</span>
+@page "/calculator"
+@inject IApiService Api
+
+&lt;h3 class="mb-4"&gt;Ore Calculator&lt;/h3&gt;
+
+&lt;div class="row"&gt;
+    &lt;div class="col-md-5"&gt;
+        &lt;div class="card shadow"&gt;
+            &lt;div class="card-body"&gt;
+                &lt;CategorySelect OnCategoryChanged="HandleCategoryChanged" /&gt;
+                &lt;ItemSelect Items="@currentItems"
+                            Disabled="@(selectedCategory == null)"
+                            OnItemSelected="HandleItemSelected"
+                            @key="@selectedCategory" /&gt;
+                &lt;QuantityInput OnQuantityChanged="HandleQuantityChanged"
+                               Disabled="@(selectedItem == null)" /&gt;
+                &lt;DualInput OnValueChanged="HandleFeeChanged" /&gt;
+
+                &lt;button class="btn btn-primary w-100 mt-3"
+                        @onclick="CalculateAsync"
+                        disabled="@(!canCalculate)"&gt;
+                    @if (isLoading)
+                    {
+                        &lt;span class="spinner-border spinner-border-sm me-1"&gt;&lt;/span&gt;
+                    }
+                    @(isLoading ? "Berechne..." : "Berechnen")
+                &lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class="col-md-7"&gt;
+        @if (isLoading)
+        {
+            &lt;div class="text-center py-5"&gt;
+                &lt;span class="spinner-border text-primary" style="width:3rem;height:3rem;"&gt;&lt;/span&gt;
+                &lt;p class="mt-2 text-muted"&gt;Berechne Preise...&lt;/p&gt;
+            &lt;/div&gt;
+        }
+        else if (errorMessage != null)
+        {
+            &lt;div class="alert alert-danger"&gt;
+                &lt;strong&gt;Fehler:&lt;/strong&gt; @errorMessage
+            &lt;/div&gt;
+        }
+        else if (result != null)
+        {
+            &lt;div class="card shadow"&gt;
+                &lt;div class="card-header fw-bold"&gt;
+                    Ergebnis für @result.ItemName (x @result.Quantity)
+                &lt;/div&gt;
+                &lt;div class="card-body"&gt;
+                    &lt;table class="table mb-0"&gt;
+                        &lt;tbody&gt;
+                            &lt;tr&gt;&lt;td&gt;Gesamtpreis&lt;/td&gt;&lt;td class="text-end"&gt;@result.TotalPrice.ToString("N2") ISK&lt;/td&gt;&lt;/tr&gt;
+                            &lt;tr&gt;&lt;td&gt;Gebühr (@result.Fee.ToString("F1")%)&lt;/td&gt;&lt;td class="text-end text-danger"&gt;-@((result.TotalPrice * result.Fee / 100).ToString("N2")) ISK&lt;/td&gt;&lt;/tr&gt;
+                            &lt;tr class="fw-bold"&gt;&lt;td&gt;Netto&lt;/td&gt;&lt;td class="text-end"&gt;@result.NetPrice.ToString("N2") ISK&lt;/td&gt;&lt;/tr&gt;
+                        &lt;/tbody&gt;
+                    &lt;/table&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        }
+    &lt;/div&gt;
+&lt;/div&gt;
+
+@code {
+    private string? selectedCategory;
+    private string? selectedItem;
+    private List&lt;string&gt; currentItems = new();
+    private long quantity;
+    private decimal fee;
+    private CalculationResult? result;
+    private bool isLoading;
+    private string? errorMessage;
+
+    private Dictionary&lt;string, List&lt;string&gt;&gt; data = new()
+    {
+        ["Ordinary"] = new() { "Veldspar", "Scordite", "Pyroxeres" },
+        ["Compressed"] = new() { "Compressed Veldspar", "Compressed Scordite" },
+        ["Moon"] = new() { "Bitumens", "Carnotite", "Cinnabar" },
+        ["Compressed Moon"] = new() { "Compressed Bitumens", "Compressed Carnotite" },
+    };
+
+    private bool canCalculate =&gt;
+        selectedItem != null &amp;&amp; quantity &gt; 0 &amp;&amp; fee &gt;= 0;
+
+    private async Task HandleCategoryChanged(string cat)
+    {
+        selectedCategory = cat;
+        currentItems = data.GetValueOrDefault(cat, new());
+        selectedItem = null;
+        result = null;
+    }
+
+    private void HandleItemSelected(string item)
+    {
+        selectedItem = item;
+        result = null;
+    }
+
+    private void HandleQuantityChanged(long val)
+    {
+        quantity = val;
+        result = null;
+    }
+
+    private void HandleFeeChanged(decimal val)
+    {
+        fee = val;
+        result = null;
+    }
+
+    private async Task CalculateAsync()
+    {
+        if (!canCalculate) return;
+
+        isLoading = true;
+        errorMessage = null;
+        result = null;
+
+        try
+        {
+            <span class="cm">// Simulierte Berechnung (hier später echter API-Call)</span>
+            await Task.Delay(500);
+            var total = quantity * 42.42m;
+            var net = total * (1 - fee / 100);
+            result = new CalculationResult
+            {
+                ItemName = selectedItem!,
+                Quantity = quantity,
+                TotalPrice = total,
+                Fee = fee,
+                NetPrice = net,
+                Orders = new()
+            };
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li>Die Controller-Seite ruft <code>StateHasChanged()</code> nicht manuell auf (Blazor macht das automatisch bei EventCallbacks).</li>
+    <li>Definiere ein Datenmodell für das Ergebnis, das alle relevanten Felder bündelt.</li>
+    <li>Der <code>disabled</code>-Zustand des Berechnen-Buttons ergibt sich aus: Item != null && quantity > 0 && fee >= 0.</li>
+    <li>Nutze <code>@key</code> auf Komponenten, um Blazor bei State-Änderungen ein sauberes Re-Rendering zu ermöglichen.</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Seite enthält: Item-Auswahl, Mengen-Eingabe, Gebühren-Eingabe, Ergebnis-Tabelle</li>
+    <li>Alle Child-Komponenten werden per Parameter gesteuert</li>
+    <li>Alle Child-Änderungen werden per Callback an die Page gemeldet</li>
+    <li>Berechnen-Button ist deaktiviert bei ungültigen Eingaben</li>
+    <li>Spinner wird während der Berechnung angezeigt</li>
+    <li>Fehler werden als rote Meldung dargestellt</li>
+    <li>Bei Änderung einer Eingabe wird das vorherige Ergebnis zurückgesetzt</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="08-api-httpclient.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="10-css-theme.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>

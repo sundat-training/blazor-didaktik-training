@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blazor Component Training — Aufgabenübersicht</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Blazor Component Training</h1>
+  <p>10 aufeinander aufbauende Aufgaben, die Schritt für Schritt in die Welt der Blazor-Komponenten einführen. Jede Aufgabe ist in sich abgeschlossen und baut auf den Konzepten der vorherigen auf.</p>
+</div>
+
+<div class="container">
+
+<div class="task-grid">
+
+  <a href="01-select-einzeln.html" class="task-card">
+    <div class="num">Aufgabe 01</div>
+    <h3>Einfaches Select</h3>
+    <p>Ein Dropdown mit festen Optionen – der Einstieg in Formularelemente und Datenbindung.</p>
+    <div class="tags">
+      <span class="tag tag-html">&lt;select&gt;</span>
+      <span class="tag tag-cs">@bind</span>
+      <span class="tag tag-cs">@onchange</span>
+    </div>
+  </a>
+
+  <a href="02-select-nested.html" class="task-card">
+    <div class="num">Aufgabe 02</div>
+    <h3>Gekaskadete Selects</h3>
+    <p>Zwei abhängige Dropdowns: Die Auswahl im ersten bestimmt den Inhalt des zweiten.</p>
+    <div class="tags">
+      <span class="tag tag-html">&lt;select&gt;</span>
+      <span class="tag tag-cs">EventCallback</span>
+      <span class="tag tag-cs">Parameter</span>
+    </div>
+  </a>
+
+  <a href="03-input-validation.html" class="task-card">
+    <div class="num">Aufgabe 03</div>
+    <h3>Input mit Validierung</h3>
+    <p>Ein numerisches Eingabefeld, das auf gültige Werte prüft und Fehler anzeigt.</p>
+    <div class="tags">
+      <span class="tag tag-html">&lt;input&gt;</span>
+      <span class="tag tag-cs">tryParse</span>
+      <span class="tag tag-cs">Conditional Rendering</span>
+    </div>
+  </a>
+
+  <a href="04-dual-input.html" class="task-card">
+    <div class="num">Aufgabe 04</div>
+    <h3>Gekoppelte Inputs</h3>
+    <p>Slider und Zahlenfeld, die sich gegenseitig synchron halten – bidirektionale Steuerung.</p>
+    <div class="tags">
+      <span class="tag tag-html">&lt;input type="range"&gt;</span>
+      <span class="tag tag-cs">oninput</span>
+      <span class="tag tag-cs">Sync</span>
+    </div>
+  </a>
+
+  <a href="05-table-einfach.html" class="task-card">
+    <div class="num">Aufgabe 05</div>
+    <h3>Einfache Tabelle</h3>
+    <p>Daten aus einer Liste in einer HTML-Tabelle darstellen – der erste Schritt zu DataGrids.</p>
+    <div class="tags">
+      <span class="tag tag-html">&lt;table&gt;</span>
+      <span class="tag tag-cs">@foreach</span>
+      <span class="tag tag-cs">Conditional Rendering</span>
+    </div>
+  </a>
+
+  <a href="06-table-sortierbar.html" class="task-card">
+    <div class="num">Aufgabe 06</div>
+    <h3>Sortierbare Tabelle</h3>
+    <p>Tabellenspalten per Klick sortieren, Einträge filtern – Interaktivität in Datenansichten.</p>
+    <div class="tags">
+      <span class="tag tag-cs">LINQ OrderBy</span>
+      <span class="tag tag-cs">State</span>
+      <span class="tag tag-css">▲▼</span>
+    </div>
+  </a>
+
+  <a href="07-live-search.html" class="task-card">
+    <div class="num">Aufgabe 07</div>
+    <h3>Live-Suche / Autocomplete</h3>
+    <p>Ein Textfeld, das während der Eingabe Vorschläge filtert – Echtzeit-UI mit eigenem Dropdown.</p>
+    <div class="tags">
+      <span class="tag tag-html">&lt;input&gt;</span>
+      <span class="tag tag-cs">oninput</span>
+      <span class="tag tag-css">Positionierung</span>
+    </div>
+  </a>
+
+  <a href="08-api-httpclient.html" class="task-card">
+    <div class="num">Aufgabe 08</div>
+    <h3>API-Integration mit HttpClient</h3>
+    <p>Daten von einer REST-API abrufen, paginieren und in der UI darstellen.</p>
+    <div class="tags">
+      <span class="tag tag-cs">HttpClient</span>
+      <span class="tag tag-cs">IHttpClientFactory</span>
+      <span class="tag tag-cs">async/await</span>
+    </div>
+  </a>
+
+  <a href="09-component-state.html" class="task-card">
+    <div class="num">Aufgabe 09</div>
+    <h3>Component State</h3>
+    <p>Komponenten-übergreifendes State-Management mit Parametern und Callbacks.</p>
+    <div class="tags">
+      <span class="tag tag-cs">[Parameter]</span>
+      <span class="tag tag-cs">EventCallback&lt;T&gt;</span>
+      <span class="tag tag-cs">Parent→Child</span>
+    </div>
+  </a>
+
+  <a href="10-css-theme.html" class="task-card">
+    <div class="num">Aufgabe 10</div>
+    <h3>CSS-Techniken & Theme</h3>
+    <p>Scoped CSS, Dark/Light-Mode, responsive Layouts – das Finish für jede Komponente.</p>
+    <div class="tags">
+      <span class="tag tag-css">Scoped CSS</span>
+      <span class="tag tag-css">::deep</span>
+      <span class="tag tag-css">Dark Mode</span>
+    </div>
+  </a>
+
+</div>
+
+</div>
+
+</body>
+</html>

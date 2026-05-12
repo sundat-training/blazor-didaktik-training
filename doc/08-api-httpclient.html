@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 08 — API-Integration mit HttpClient</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="07-live-search.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="09-component-state.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 08</div>
+  <h1>API-Integration mit HttpClient</h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du rufst Daten von einer externen REST-API ab und stellst sie in der UI dar. Du lernst die Einrichtung eines Typed HttpClient via <code>IHttpClientFactory</code>, den Umgang mit asynchronen API-Calls (<code>async</code>/<code>await</code>) und die Verarbeitung von paginierten JSON-Responses.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>IHttpClientFactory</code>
+    <code>Typed HttpClient</code>
+    <code>async Task</code>
+    <code>System.Text.Json</code>
+    <code>Paginierung (X-Pages)</code>
+    <code>Loading State / Spinner</code>
+    <code>try/catch</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle ein Interface <code>IApiService</code> und eine Implementierung <code>ApiService</code>.</li>
+    <li><span class="step">2.</span> Registriere den Service in <code>Program.cs</code> als Typed HttpClient: <code>services.AddHttpClient&lt;IApiService, ApiService&gt;(c => c.BaseAddress = new Uri("https://api.example.com"))</code>.</li>
+    <li><span class="step">3.</span> Implementiere eine Methode <code>Task&lt;List&lt;T&gt;&gt; GetDataAsync&lt;T&gt;(string endpoint)</code>, die:
+      <ul>
+        <li>Einen <code>GET</code>-Request an den Endpoint sendet</li>
+        <li>Den JSON-Response mit <code>System.Text.Json</code> deserialisiert</li>
+        <li>Den <code>X-Pages</code>-Header ausliest und alle Seiten abruft</li>
+        <li>Die Ergebnisse mit <code>SelectMany</code> zusammenführt</li>
+      </ul>
+    </li>
+    <li><span class="step">4.</span> Füge in <code>Program.cs</code> einen Timeout von 30 Sekunden und einen <code>User-Agent</code>-Header hinzu.</li>
+    <li><span class="step">5.</span> Baue eine Komponente <code>ApiDataView.razor</code> mit drei Zuständen: <strong>Laden</strong> (Spinner), <strong>Daten</strong> (Tabelle), <strong>Fehler</strong> (rote Meldung).</li>
+    <li><span class="step">6.</span> Rufe die API asynchron auf: <code>protected override async Task OnInitializedAsync()</code> rufe <code>await service.GetDataAsync(...)</code>.</li>
+    <li><span class="step">7.</span> Fange <code>HttpRequestException</code> und <code>TaskCanceledException</code> (Timeout) und zeige eine benutzerfreundliche Fehlermeldung.</li>
+    <li><span class="step">8.</span> Bonus: Füge einen <code>[Parameter] int DelayMs</code> hinzu, der zwischen Paginierungs-Requests eine Pause einlegt (Rate-Limiting).</li>
+  </ol>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Die wichtigsten Bausteine:</p>
+    <pre><code><span class="cm">// Typed HttpClient registrieren (Program.cs):</span>
+builder.Services.AddHttpClient&lt;IApiService, ApiService&gt;(client =&gt;
+{
+    client.BaseAddress = new Uri("https://esi.evetech.net");
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "MyApp/1.0");
+});
+
+<span class="cm">// GET-Request + JSON deserialisieren:</span>
+public async Task&lt;List&lt;T&gt;&gt; GetDataAsync&lt;T&gt;(string endpoint)
+{
+    var response = await <span class="hl">httpClient.GetAsync(endpoint)</span>;
+    response.EnsureSuccessStatusCode();
+
+    var json = await response.Content.ReadAsStringAsync();
+    return <span class="hl">JsonSerializer.Deserialize&lt;List&lt;T&gt;&gt;(json, jsonOptions)</span> ?? new();
+}
+
+<span class="cm">// X-Pages-Header auslesen:</span>
+if (response.Headers.TryGetValues("X-Pages", out var values))
+{
+    totalPages = int.Parse(values.First());
+}
+
+<span class="cm">// Paginierung mit SelectMany:</span>
+var allPages = await Task.WhenAll(
+    Enumerable.Range(1, totalPages).Select(async page =&gt;
+    {
+        await Task.Delay(DelayMs);
+        return await GetPageAsync&lt;T&gt;(endpoint, page);
+    })
+);
+return allPages.SelectMany(x =&gt; x).ToList();
+
+<span class="cm">// Komponente mit 3 Zuständen:</span>
+@if (isLoading)
+{
+    &lt;span class="spinner-border"&gt;&lt;/span&gt;
+}
+else if (errorMessage != null)
+{
+    &lt;div class="alert alert-danger"&gt;@errorMessage&lt;/div&gt;
+}
+else
+{
+    &lt;OrderTable Orders="@data" /&gt;
+}</code></pre>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen:</p>
+    <pre><code><span class="cm">// IApiService.cs</span>
+public interface IApiService
+{
+    Task&lt;List&lt;T&gt;&gt; GetDataAsync&lt;T&gt;(string endpoint, int delayMs = 100);
+}
+
+<span class="cm">// ApiService.cs (Auszug)</span>
+public class ApiService : IApiService
+{
+    private readonly HttpClient httpClient;
+    private readonly JsonSerializerOptions jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    public ApiService(HttpClient httpClient)
+    {
+        this.httpClient = httpClient;
+    }
+
+    public async Task&lt;List&lt;T&gt;&gt; GetDataAsync&lt;T&gt;(string endpoint, int delayMs = 100)
+    {
+        <span class="cm">// Erste Seite abrufen</span>
+        var response = await httpClient.GetAsync(endpoint + "&amp;page=1");
+        response.EnsureSuccessStatusCode();
+
+        var totalPages = 1;
+        if (response.Headers.TryGetValues("X-Pages", out var values))
+            int.TryParse(values.First(), out totalPages);
+
+        var firstPage = await DeserializeAsync&lt;T&gt;(response);
+        if (totalPages &lt;= 1) return firstPage;
+
+        <span class="cm">// Restliche Seiten parallel abrufen</span>
+        var remaining = Enumerable.Range(2, totalPages - 1)
+            .Select(async page =&gt;
+            {
+                await Task.Delay(delayMs);
+                var resp = await httpClient.GetAsync(endpoint + $"&amp;page={page}");
+                resp.EnsureSuccessStatusCode();
+                return await DeserializeAsync&lt;T&gt;(resp);
+            });
+
+        var results = await Task.WhenAll(remaining);
+        return firstPage.Concat(<span class="err">❌</span>).ToList(); <span class="cm">// Alle Seiten zusammenführen</span>
+    }
+
+    private async Task&lt;List&lt;T&gt;&gt; DeserializeAsync&lt;T&gt;(HttpResponseMessage resp)
+    {
+        var json = await resp.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize&lt;List&lt;T&gt;&gt;(json, jsonOptions) ?? new();
+    }
+}</code></pre>
+    <pre><code><span class="cm">// ApiDataView.razor (Auszug @code)</span>
+@code {
+    [Inject] private IApiService Api { get; set; } = null!;
+    [Parameter] public string Endpoint { get; set; } = "";
+
+    private List&lt;Order&gt;? data;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            data = await <span class="err">❌</span> <span class="cm">// API aufrufen</span>
+        }
+        catch (<span class="err">❌</span>) <span class="cm">// HttpRequestException</span>
+        {
+            errorMessage = $"Fehler beim Abrufen der Daten: {ex.Message}";
+        }
+        catch (<span class="err">❌</span>) <span class="cm">// TaskCanceledException (Timeout)</span>
+        {
+            errorMessage = "Die Anfrage hat zu lange gedauert (Timeout).";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}</code></pre>
+    <p>📌 <strong>Fehlend:</strong> (1) <code>results.SelectMany(x => x)</code> oder <code>firstPage.Concat(results.SelectMany(x => x))</code>. (2) <code>Api.GetDataAsync&lt;Order&gt;(Endpoint)</code>. (3) <code>HttpRequestException ex</code>. (4) <code>TaskCanceledException ex</code>.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">// IApiService.cs</span>
+public interface IApiService
+{
+    Task&lt;List&lt;T&gt;&gt; GetDataAsync&lt;T&gt;(string endpoint, int delayMs = 100);
+}</code></pre>
+    <pre><code><span class="cm">// ApiService.cs</span>
+public class ApiService : IApiService
+{
+    private readonly HttpClient httpClient;
+    private readonly JsonSerializerOptions jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    public ApiService(HttpClient httpClient)
+    {
+        this.httpClient = httpClient;
+    }
+
+    public async Task&lt;List&lt;T&gt;&gt; GetDataAsync&lt;T&gt;(string endpoint, int delayMs = 100)
+    {
+        var firstResponse = await httpClient.GetAsync(endpoint + "&amp;page=1");
+        firstResponse.EnsureSuccessStatusCode();
+
+        var totalPages = 1;
+        if (firstResponse.Headers.TryGetValues("X-Pages", out var values))
+            int.TryParse(values.First(), out totalPages);
+
+        var firstPage = await DeserializeAsync&lt;T&gt;(firstResponse);
+        if (totalPages &lt;= 1) return firstPage;
+
+        var remainingTasks = Enumerable.Range(2, totalPages - 1)
+            .Select(async page =&gt;
+            {
+                await Task.Delay(delayMs);
+                var resp = await httpClient.GetAsync(endpoint + $"&amp;page={page}");
+                resp.EnsureSuccessStatusCode();
+                return await DeserializeAsync&lt;T&gt;(resp);
+            });
+
+        var remainingResults = await Task.WhenAll(remainingTasks);
+        return firstPage.Concat(remainingResults.SelectMany(x => x)).ToList();
+    }
+
+    private async Task&lt;List&lt;T&gt;&gt; DeserializeAsync&lt;T&gt;(HttpResponseMessage resp)
+    {
+        var json = await resp.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize&lt;List&lt;T&gt;&gt;(json, jsonOptions) ?? new();
+    }
+}</code></pre>
+    <pre><code><span class="cm">// Program.cs (Auszug)</span>
+builder.Services.AddHttpClient&lt;IApiService, ApiService&gt;(client =&gt;
+{
+    client.BaseAddress = new Uri("https://esi.evetech.net");
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.DefaultRequestHeaders.Add("User-Agent", "OreCalculator/1.0");
+});</code></pre>
+    <pre><code><span class="cm">@* ApiDataView.razor *@</span>
+
+@if (isLoading)
+{
+    &lt;div class="text-center py-4"&gt;
+        &lt;span class="spinner-border text-primary" role="status"&gt;&lt;/span&gt;
+        &lt;p class="mt-2 text-muted"&gt;Lade Daten...&lt;/p&gt;
+    &lt;/div&gt;
+}
+else if (errorMessage != null)
+{
+    &lt;div class="alert alert-danger"&gt;@errorMessage&lt;/div&gt;
+}
+else if (data != null)
+{
+    &lt;OrderTable Title="@Title" Orders="@data" /&gt;
+}
+
+@code {
+    [Inject] private IApiService Api { get; set; } = null!;
+    [Parameter] public string Title { get; set; } = "API-Daten";
+    [Parameter] public string Endpoint { get; set; } = "";
+    [Parameter] public int DelayMs { get; set; } = 100;
+
+    private List&lt;Order&gt;? data;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            data = await Api.GetDataAsync&lt;Order&gt;(Endpoint, DelayMs);
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Fehler beim Abrufen der Daten: {ex.Message}";
+        }
+        catch (TaskCanceledException)
+        {
+            errorMessage = "Die Anfrage hat zu lange gedauert (Timeout).";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li>Nutze <code>HttpClient</code> <strong>nicht</strong> mit <code>new HttpClient()</code> – immer über <code>IHttpClientFactory</code> (verhindert Socket-Exhaustion).</li>
+    <li>Der <code>X-Pages</code>-Header ist ein String. Parse ihn mit <code>int.TryParse()</code>.</li>
+    <li>Verwende <code>await Task.Delay(DelayMs)</code> zwischen Paginierungs-Requests, um die API nicht zu überlasten.</li>
+    <li><code>StateHasChanged()</code> wird nach <code>OnInitializedAsync</code> automatisch aufgerufen – solange du im UI-Thread bleibst.</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>API-Daten werden asynchron geladen und angezeigt</li>
+    <li>Spinner wird während des Ladens angezeigt</li>
+    <li>Fehler werden abgefangen und als rote Meldung dargestellt</li>
+    <li>Paginierung: Alle Seiten werden abgerufen und zusammengeführt</li>
+    <li>HttpClient ist als Typed Client via IHttpClientFactory registriert</li>
+    <li>Timeout und User-Agent sind konfiguriert</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="07-live-search.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="09-component-state.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>

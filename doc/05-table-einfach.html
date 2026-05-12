@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 05 — Einfache Tabelle</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="04-dual-input.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="06-table-sortierbar.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 05</div>
+  <h1>Einfache Tabelle</h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du stellst eine Liste von Datenobjekten in einer HTML-Tabelle dar. Du lernst <code>@foreach</code> zur Iteration, bedingte Formatierung von Zeilen und den Umgang mit <code>[Parameter]</code>-Listen.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>&lt;table&gt;</code>
+    <code>&lt;thead&gt; / &lt;tbody&gt; / &lt;tfoot&gt;</code>
+    <code>@foreach</code>
+    <code>Conditional Rendering</code>
+    <code>[Parameter] List&lt;T&gt;</code>
+    <code>CSS-Klasse bedingt setzen</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle ein Datenmodell <code>Order</code> (class / record) mit den Properties <code>Price (decimal)</code>, <code>Volume (long)</code>, <code>IsBuyOrder (bool)</code>, <code>Location (string)</code>.</li>
+    <li><span class="step">2.</span> Erstelle <code>OrderTable.razor</code> mit einem <code>[Parameter] List&lt;Order&gt; Orders</code>.</li>
+    <li><span class="step">3.</span> Baue eine HTML-Tabelle: <code>&lt;thead&gt;</code> mit Spaltenköpfen, <code>&lt;tbody&gt;</code> mit <code>@foreach</code> über die Orders.</li>
+    <li><span class="step">4.</span> Formatiere Buy-Orders mit grünem Hintergrund (<code>class="table-success"</code>), Sell-Orders mit rotem (<code>class="table-danger"</code>).</li>
+    <li><span class="step">5.</span> Zeige in der Fußzeile (<code>&lt;tfoot&gt;</code>) die Gesamtanzahl der Einträge an.</li>
+    <li><span class="step">6.</span> Wenn die Liste <code>null</code> oder leer ist, zeige eine Meldung "Keine Daten vorhanden" statt der Tabelle.</li>
+  </ol>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Die wichtigsten Bausteine:</p>
+    <pre><code><span class="cm">// Datenmodell (record):</span>
+public record Order(
+    <span class="hl">decimal</span> Price,
+    <span class="hl">long</span> Volume,
+    <span class="hl">bool</span> IsBuyOrder,
+    <span class="hl">string</span> Location
+);
+
+<span class="cm">// Tabelle mit @foreach:</span>
+&lt;table class="table table-striped"&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Preis&lt;/th&gt;
+            &lt;th&gt;Volumen&lt;/th&gt;
+            &lt;th&gt;Typ&lt;/th&gt;
+            &lt;th&gt;Station&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        @foreach (var order in Orders)
+        {
+            &lt;tr class="@(<span class="hl">order.IsBuyOrder ? "table-success" : "table-danger"</span>)"&gt;
+                &lt;td&gt;@order.Price.ToString("N2")&lt;/td&gt;
+                ...
+            &lt;/tr&gt;
+        }
+    &lt;/tbody&gt;
+    &lt;tfoot&gt;
+        &lt;tr&gt;&lt;td colspan="4"&gt;
+            @Orders.Count Einträge
+        &lt;/td&gt;&lt;/tr&gt;
+    &lt;/tfoot&gt;
+&lt;/table&gt;</code></pre>
+    <p>💡 Bedingte Anzeige mit <code>@if (Orders?.Any() == true)</code> – sonst "Keine Daten".</p>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen:</p>
+    <pre><code><span class="cm">@* OrderTable.razor *@</span>
+
+&lt;div class="card shadow"&gt;
+    &lt;div class="card-header fw-bold"&gt;@Title&lt;/div&gt;
+    &lt;div class="card-body"&gt;
+        @if (<span class="err">❌</span>) <span class="cm">// Prüfung: null oder leer</span>
+        {
+            &lt;p class="text-muted"&gt;Keine Daten vorhanden&lt;/p&gt;
+        }
+        else
+        {
+            &lt;div class="table-responsive"&gt;
+                &lt;table class="table table-striped table-hover mb-0"&gt;
+                    &lt;thead class="table-dark"&gt;
+                        &lt;tr&gt;
+                            &lt;th&gt;Preis (ISK)&lt;/th&gt;
+                            &lt;th&gt;Volumen&lt;/th&gt;
+                            &lt;th&gt;Typ&lt;/th&gt;
+                            &lt;th&gt;Station&lt;/th&gt;
+                        &lt;/tr&gt;
+                    &lt;/thead&gt;
+                    &lt;tbody&gt;
+                        @foreach (var order in Orders)
+                        {
+                            &lt;tr class="@(order.IsBuyOrder
+                                ? "table-success"
+                                : "table-danger")"&gt;
+                                &lt;td&gt;@order.Price.<span class="err">❌</span>&lt;/td&gt; <span class="cm">// Formatierung</span>
+                                &lt;td&gt;@order.Volume.ToString("N0")&lt;/td&gt;
+                                &lt;td&gt;@(order.IsBuyOrder ? "Ankauf" : "Verkauf")&lt;/td&gt;
+                                &lt;td&gt;@order.Location&lt;/td&gt;
+                            &lt;/tr&gt;
+                        }
+                    &lt;/tbody&gt;
+                    &lt;tfoot&gt;
+                        &lt;tr class="fw-bold"&gt;
+                            &lt;td colspan="4" class="text-end"&gt;
+                                @Orders.Count Einträge gesamt
+                            &lt;/td&gt;
+                        &lt;/tr&gt;
+                    &lt;/tfoot&gt;
+                &lt;/table&gt;
+            &lt;/div&gt;
+        }
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+    <p>📌 <strong>Fehlend:</strong> (1) <code>Orders == null || Orders.Count == 0</code>. (2) <code>.ToString("N2")</code> für Price-Formatierung. (3) <code>[Parameter]</code>-Deklarationen im <code>@code</code>-Block.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">// Order.cs (Datenmodell)</span>
+public class Order
+{
+    public decimal Price { get; set; }
+    public long Volume { get; set; }
+    public bool IsBuyOrder { get; set; }
+    public string Location { get; set; } = "";
+}</code></pre>
+    <pre><code><span class="cm">@* OrderTable.razor *@</span>
+
+&lt;div class="card shadow"&gt;
+    &lt;div class="card-header fw-bold"&gt;@Title&lt;/div&gt;
+    &lt;div class="card-body"&gt;
+        @if (Orders == null || Orders.Count == 0)
+        {
+            &lt;p class="text-muted text-center py-3"&gt;Keine Daten vorhanden&lt;/p&gt;
+        }
+        else
+        {
+            &lt;div class="table-responsive"&gt;
+                &lt;table class="table table-striped table-hover mb-0"&gt;
+                    &lt;thead class="table-dark"&gt;
+                        &lt;tr&gt;
+                            &lt;th&gt;Preis (ISK)&lt;/th&gt;
+                            &lt;th&gt;Volumen&lt;/th&gt;
+                            &lt;th&gt;Typ&lt;/th&gt;
+                            &lt;th&gt;Station&lt;/th&gt;
+                        &lt;/tr&gt;
+                    &lt;/thead&gt;
+                    &lt;tbody&gt;
+                        @foreach (var order in Orders)
+                        {
+                            &lt;tr class="@(order.IsBuyOrder
+                                ? "table-success"
+                                : "table-danger")"&gt;
+                                &lt;td class="text-end"&gt;@order.Price.ToString("N2")&lt;/td&gt;
+                                &lt;td class="text-end"&gt;@order.Volume.ToString("N0")&lt;/td&gt;
+                                &lt;td&gt;@(order.IsBuyOrder ? "Ankauf" : "Verkauf")&lt;/td&gt;
+                                &lt;td&gt;@order.Location&lt;/td&gt;
+                            &lt;/tr&gt;
+                        }
+                    &lt;/tbody&gt;
+                    &lt;tfoot&gt;
+                        &lt;tr class="fw-bold"&gt;
+                            &lt;td colspan="4" class="text-end"&gt;
+                                @Orders.Count Eintr&amp;auml;ge gesamt
+                            &lt;/td&gt;
+                        &lt;/tr&gt;
+                    &lt;/tfoot&gt;
+                &lt;/table&gt;
+            &lt;/div&gt;
+        }
+    &lt;/div&gt;
+&lt;/div&gt;
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Marktorder";
+
+    [Parameter]
+    public List&lt;Order&gt;? Orders { get; set; }
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li>Verwende <code>string.Format("{0:N2}", item.Price)</code> oder <code>item.Price.ToString("N2")</code> für formatierte Zahlen.</li>
+    <li>Bedingte CSS-Klasse: <code>class="@(item.IsBuyOrder ? "table-success" : "table-danger")"</code>.</li>
+    <li>Gib einen <code>[Parameter] string Title</code> für die Card-Überschrift, damit die Komponente wiederverwendbar ist.</li>
+    <li>Überlege: Soll die Tabelle responsiv sein? → <code>&lt;div class="table-responsive"&gt;</code> drumherum.</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Tabelle zeigt alle übergebenen Orders mit Price, Volume, Type und Location an</li>
+    <li>Buy-Orders haben grünen, Sell-Orders roten Hintergrund</li>
+    <li>Fußzeile zeigt die Gesamtanzahl der Einträge</li>
+    <li>Bei leerer Liste erscheint "Keine Daten vorhanden"</li>
+    <li>Zahlen sind lesbar formatiert (Tausendertrennzeichen, 2 Dezimalstellen)</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="04-dual-input.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="06-table-sortierbar.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>

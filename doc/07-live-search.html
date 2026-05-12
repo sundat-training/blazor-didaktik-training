@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 07 — Live-Suche / Autocomplete</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="06-table-sortierbar.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="08-api-httpclient.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 07</div>
+  <h1>Live-Suche / Autocomplete</h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du baust ein Textfeld, das bei jeder Tastatureingabe eine Dropdown-Liste mit passenden Vorschlägen anzeigt. Du lernst Echtzeit-Filterung (case-insensitive), das Positionieren eines absoluten Dropdowns und die Interaktion zwischen Texteingabe und Auswahl.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>@oninput</code>
+    <code>case-insensitive Filter</code>
+    <code>position: absolute</code>
+    <code>z-index / overflow-y</code>
+    <code>Dropdown sichtbar/unsichtbar</code>
+    <code>EventCallback&lt;Item&gt;</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle <code>SearchSelect.razor</code> mit einem <code>&lt;input type="text"&gt;</code> und einem Dropdown-<code>&lt;div&gt;</code> darunter.</li>
+    <li><span class="step">2.</span> Bei <code>@oninput</code> filterst du eine <code>[Parameter] List&lt;string&gt; Items</code> case-insensitive nach dem eingegebenen Text.</li>
+    <li><span class="step">3.</span> Zeige die gefilterten Ergebnisse als Liste von <code>&lt;button&gt;</code>-Elementen im Dropdown an.</li>
+    <li><span class="step">4.</span> Positioniere das Dropdown mit <code>position: absolute; z-index: 1000; max-height: 300px; overflow-y: auto</code>, direkt unter dem Input.</li>
+    <li><span class="step">5.</span> Klick auf ein Ergebnis setzt den Input-Text und feuert <code>EventCallback&lt;string&gt;</code>. Das Dropdown schließt sich.</li>
+    <li><span class="step">6.</span> Das Dropdown schließt auch bei Klick außerhalb (Tipp: ein <code>@onblur</code> mit <code>setTimeout</code>-ähnlicher Logik oder ein Fokus-Container).</li>
+    <li><span class="step">7.</span> Erweitere das Datenmodell: Statt <code>List&lt;string&gt;</code> übergib eine Liste von Objekten, die sowohl <code>DisplayName</code> als auch <code>Value</code> haben.</li>
+  </ol>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Die wichtigsten Bausteine:</p>
+    <pre><code><span class="cm">// Container mit position: relative für Dropdown-Positionierung:</span>
+&lt;div class="<span class="hl">position-relative</span>"&gt;
+    &lt;input type="text" @oninput="HandleInput"
+           @onblur="HandleBlur" @onfocus="HandleFocus"
+           @bind:event="oninput" /&gt;
+
+    @if (showDropdown)
+    {
+        &lt;div class="<span class="hl">position-absolute</span>"
+             style="z-index: 1000; max-height: 300px; overflow-y: auto;"&gt;
+            @foreach (var item in filteredItems)
+            {
+                &lt;button class="dropdown-item"
+                        @onmousedown="<span class="hl">() => SelectItem(item)</span>"&gt;
+                    @item.DisplayName
+                &lt;/button&gt;
+            }
+        &lt;/div&gt;
+    }
+&lt;/div&gt;
+
+<span class="cm">// Case-insensitive Filterung:</span>
+private void HandleInput(ChangeEventArgs e)
+{
+    searchText = e.Value?.ToString() ?? "";
+    filteredItems = Items.Where(x =&gt;
+        x.DisplayName.<span class="hl">Contains(searchText, StringComparison.OrdinalIgnoreCase)</span>
+        || x.Value.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
+    showDropdown = true;
+}
+
+<span class="cm">// @onmousedown statt @onclick, damit @onblur nicht dazwischenfunkt:</span>
+private void SelectItem(SelectItem item)
+{
+    searchText = item.DisplayName;
+    showDropdown = false;
+    OnItemSelected.InvokeAsync(item.Value);
+}</code></pre>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen:</p>
+    <pre><code><span class="cm">// SearchItem.cs (Datenmodell)</span>
+public class SearchItem
+{
+    public string DisplayName { get; set; } = "";
+    public string Value { get; set; } = "";
+}</code></pre>
+    <pre><code><span class="cm">@* SearchSelect.razor *@</span>
+
+&lt;div class="position-relative"&gt;
+    &lt;input type="text" class="form-control"
+           @oninput="HandleInput"
+           @onblur="HandleBlur"
+           @onfocus="<span class="err">❌</span>"
+           value="@searchText"
+           placeholder="Suche..." /&gt;
+
+    @if (showDropdown && filteredItems.Any())
+    {
+        &lt;div class="position-absolute w-100 bg-white border rounded shadow"
+             style="z-index: 1000; max-height: 300px; overflow-y: auto;"&gt;
+            @foreach (var item in filteredItems)
+            {
+                &lt;button type="button"
+                        class="dropdown-item d-block w-100 text-start px-3 py-2"
+                        @onmousedown="() => SelectItem(item)"&gt;
+                    @item.DisplayName
+                    &lt;small class="text-muted"&gt;(@item.Value)&lt;/small&gt;
+                &lt;/button&gt;
+            }
+        &lt;/div&gt;
+    }
+    @if (showDropdown && !filteredItems.Any() && !string.IsNullOrEmpty(searchText))
+    {
+        &lt;div class="position-absolute w-100 bg-white border rounded shadow p-2 text-muted"&gt;
+            Keine Ergebnisse
+        &lt;/div&gt;
+    }
+&lt;/div&gt;
+
+@code {
+    [Parameter] public List&lt;SearchItem&gt; Items { get; set; } = new();
+    [Parameter] public EventCallback&lt;string&gt; OnItemSelected { get; set; }
+
+    private string searchText = "";
+    private List&lt;SearchItem&gt; filteredItems = new();
+    private bool showDropdown = false;
+
+    private void HandleInput(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? "";
+        filteredItems = Items
+            .Where(x => x.DisplayName.Contains(searchText, <span class="err">❌</span>)
+                     || x.Value.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        showDropdown = true;
+    }
+
+    private void HandleBlur()
+    {
+        <span class="err">❌</span> <span class="cm">// Dropdown schließen mit Verzögerung</span>
+    }
+
+    private void HandleFocus()
+    {
+        if (!string.IsNullOrEmpty(searchText))
+            showDropdown = true;
+    }
+
+    private void SelectItem(SearchItem item)
+    {
+        searchText = item.DisplayName;
+        showDropdown = false;
+        <span class="err">❌</span> <span class="cm">// Callback feuern</span>
+    }
+}</code></pre>
+    <p>📌 <strong>Fehlend:</strong> (1) <code>HandleFocus</code>-Methode verknüpfen: <code>HandleFocus</code>. (2) <code>StringComparison.OrdinalIgnoreCase</code>. (3) <code>await Task.Delay(150); showDropdown = false; StateHasChanged();</code> oder <code>showDropdown = false</code> mit <code>InvokeAsync</code>. (4) <code>await OnItemSelected.InvokeAsync(item.Value)</code>.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">// SearchItem.cs</span>
+public class SearchItem
+{
+    public string DisplayName { get; set; } = "";
+    public string Value { get; set; } = "";
+}</code></pre>
+    <pre><code><span class="cm">@* SearchSelect.razor *@</span>
+
+&lt;div class="position-relative" @onfocusout="HandleFocusOut"&gt;
+    &lt;input type="text" class="form-control"
+           @oninput="HandleInput"
+           @onblur="HandleBlur"
+           @onfocus="HandleFocus"
+           value="@searchText"
+           placeholder="Suche..." /&gt;
+
+    @if (showDropdown && filteredItems.Any())
+    {
+        &lt;div class="position-absolute w-100 bg-white border rounded shadow"
+             style="z-index: 1000; max-height: 300px; overflow-y: auto;"&gt;
+            @foreach (var item in filteredItems)
+            {
+                &lt;button type="button"
+                        class="d-block w-100 text-start px-3 py-2 border-0 bg-transparent"
+                        @onmousedown="() => SelectItem(item)"
+                        onmouseover="this.classList.add('bg-light')"
+                        onmouseout="this.classList.remove('bg-light')"&gt;
+                    @item.DisplayName
+                    &lt;small class="text-muted ms-2"&gt;(@item.Value)&lt;/small&gt;
+                &lt;/button&gt;
+            }
+        &lt;/div&gt;
+    }
+
+    @if (showDropdown && !filteredItems.Any() && !string.IsNullOrEmpty(searchText))
+    {
+        &lt;div class="position-absolute w-100 bg-white border rounded shadow p-2 text-muted small"&gt;
+            Keine Ergebnisse
+        &lt;/div&gt;
+    }
+&lt;/div&gt;
+
+@code {
+    [Parameter] public List&lt;SearchItem&gt; Items { get; set; } = new();
+    [Parameter] public EventCallback&lt;string&gt; OnItemSelected { get; set; }
+
+    private string searchText = "";
+    private List&lt;SearchItem&gt; filteredItems = new();
+    private bool showDropdown = false;
+
+    private void HandleInput(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? "";
+        filteredItems = Items
+            .Where(x => x.DisplayName.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                     || x.Value.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        showDropdown = true;
+    }
+
+    private void HandleBlur()
+    {
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(200);
+            await InvokeAsync(() => showDropdown = false);
+        });
+    }
+
+    private void HandleFocus()
+    {
+        if (!string.IsNullOrEmpty(searchText))
+            showDropdown = true;
+    }
+
+    private void HandleFocusOut()
+    {
+        showDropdown = false;
+    }
+
+    private async Task SelectItem(SearchItem item)
+    {
+        searchText = item.DisplayName;
+        showDropdown = false;
+        await OnItemSelected.InvokeAsync(item.Value);
+    }
+}</code></pre>
+    <pre><code><span class="cm">@* SearchSelect.razor.css *@</span>
+::deep .dropdown-item:hover {
+    background-color: #f1f3f5;
+}
+
+.position-relative {
+    min-width: 200px;
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li>Verwende <code>StringComparison.OrdinalIgnoreCase</code> für case-insensitive Filterung.</li>
+    <li>Der Dropdown-Container muss <code>position: relative</code> sein, damit das absolute Dropdown korrekt ausrichtet.</li>
+    <li>Das Schließen bei Klick außerhalb ist in Blazor knifflig. Ein Workaround: Zwei gekoppelte Events <code>@onfocus</code>/<code>@onblur</code> mit Verzögerung oder ein Container mit <code>@onfocusout</code>.</li>
+    <li>Wenn die gefilterte Liste leer ist, zeige "Keine Ergebnisse" im Dropdown an.</li>
+    <li>Markiere den Suchtreffer im Dropdown fett (substring + <code>&lt;strong&gt;</code>).</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Dropdown erscheint während der Eingabe unter dem Textfeld</li>
+    <li>Dropdown filtert case-insensitive in Echtzeit</li>
+    <li>Dropdown schließt bei Auswahl eines Eintrags</li>
+    <li>Dropdown schließt bei Klick außerhalb des Eingabebereichs</li>
+    <li>Auswahl setzt den Wert im Textfeld und feuert EventCallback</li>
+    <li>Bei leerer Trefferliste erscheint "Keine Ergebnisse"</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="06-table-sortierbar.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="08-api-httpclient.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 06 — Sortierbare Tabelle</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="05-table-einfach.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="07-live-search.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 06</div>
+  <h1>Sortierbare Tabelle mit Filter</h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du erweiterst die Tabelle aus Aufgabe 05 um clientseitige Sortierung per Klick auf Spaltenköpfe und um einen Filter (z.B. Alle / Buy / Sell). Du lernst den Umgang mit LINQ <code>OrderBy</code>/<code>ThenBy</code>, Enums und der Sortierrichtung als Component-State.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>LINQ OrderBy / ThenBy</code>
+    <code>Enum-Filter</code>
+    <code>Sortier-Status</code>
+    <code>@onclick</code> auf &lt;th&gt;</code>
+    <code>Unicode ▲▼</code>
+    <code>IEnumerable vs List</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Kopiere die Komponente aus Aufgabe 05 und erweitere sie zu <code>SortableOrderTable.razor</code>.</li>
+    <li><span class="step">2.</span> Definiere einen Sortier-Status: <code>string sortColumn</code> (z.B. <code>"price"</code>, <code>"volume"</code>) und <code>bool sortAscending</code>.</li>
+    <li><span class="step">3.</span> Mache die <code>&lt;th&gt;</code>-Elemente klickbar. Bei Klick: Wechsel der Sortierrichtung bei gleicher Spalte, sonst neue Spalte aufsteigend.</li>
+    <li><span class="step">4.</span> Zeige einen Sortier-Indikator an: <code>" ▲"</code> oder <code>" ▼"</code> neben der aktiven Spalte.</li>
+    <li><span class="step">5.</span> Implementiere eine Filter-Button-Gruppe oberhalb der Tabelle: <code>Alle</code> | <code>Buy</code> | <code>Sell</code>. Verwende ein Enum <code>OrderFilter { All, Buy, Sell }</code>.</li>
+    <li><span class="step">6.</span> Wende Filter <strong>vor</strong> der Sortierung an. Die ursprüngliche <code>[Parameter]</code>-Liste bleibt unverändert.</li>
+  </ol>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Die wichtigsten Bausteine:</p>
+    <pre><code><span class="cm">// Sortier-Status:</span>
+private string sortColumn = "price";
+private bool sortAscending = true;
+
+<span class="cm">// Klickbarer Spaltenkopf:</span>
+&lt;th <span class="hl">@onclick="() => SortBy("price")"</span> class="cursor-pointer"&gt;
+    Preis
+    @if (sortColumn == "price")
+    {
+        &lt;span&gt;@(sortAscending ? "▲" : "▼")&lt;/span&gt;
+    }
+&lt;/th&gt;
+
+<span class="cm">// Sortier-Logik:</span>
+private void SortBy(string column)
+{
+    if (sortColumn == column)
+        sortAscending = !sortAscending;
+    else
+    {
+        sortColumn = column;
+        sortAscending = true;
+    }
+}
+
+<span class="cm">// LINQ-Sortierung abhängig von Spalte:</span>
+private List&lt;Order&gt; SortedOrders
+{
+    get
+    {
+        var filtered = Orders?.Where(o => filter == OrderFilter.All
+            || (filter == OrderFilter.Buy && o.IsBuyOrder)
+            || (filter == OrderFilter.Sell && !o.IsBuyOrder)) ?? new();
+
+        return (sortColumn, sortAscending) switch
+        {
+            ("price", true) => filtered.OrderBy(o => o.Price).ToList(),
+            ("price", false) => filtered.OrderByDescending(o => o.Price).ToList(),
+            <span class="cm">// ... volume, location, type</span>
+        };
+    }
+}</code></pre>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen im <code>@code</code>-Block:</p>
+    <pre><code>@code {
+    [Parameter] public string Title { get; set; } = "Marktorder";
+    [Parameter] public List&lt;Order&gt;? Orders { get; set; }
+
+    private string sortColumn = "price";
+    private bool sortAscending = true;
+    private OrderFilter filter = OrderFilter.All;
+
+    private enum OrderFilter { All, Buy, Sell }
+
+    private void SortBy(string column)
+    {
+        if (sortColumn == column)
+            sortAscending = <span class="err">❌</span>; <span class="cm">// umkehren</span>
+        else
+        {
+            sortColumn = column;
+            sortAscending = <span class="err">❌</span>; <span class="cm">// neue Spalte immer aufsteigend</span>
+        }
+    }
+
+    private List&lt;Order&gt; GetProcessedOrders()
+    {
+        if (Orders == null) return new();
+
+        <span class="cm">// Filtern</span>
+        var filtered = filter switch
+        {
+            OrderFilter.Buy => Orders.Where(o => o.IsBuyOrder),
+            OrderFilter.Sell => Orders.Where(o => !o.IsBuyOrder),
+            _ => Orders
+        };
+
+        <span class="cm">// Sortieren</span>
+        return (sortColumn, sortAscending) switch
+        {
+            ("price", true) => filtered.OrderBy(o => o.Price).ToList(),
+            ("price", false) => filtered.OrderByDescending(o => o.Price).ToList(),
+            ("volume", true) => filtered.OrderBy(o => o.Volume).ToList(),
+            ("volume", false) => filtered.OrderByDescending(o => o.Volume).ToList(),
+            ("location", true) => filtered.OrderBy(o => o.Location).ToList(),
+            ("location", false) => filtered.OrderByDescending(o => o.Location).ToList(),
+            ("type", true) => filtered.OrderBy(o => o.IsBuyOrder).ToList(),
+            ("type", false) => filtered.OrderByDescending(o => o.IsBuyOrder).ToList(),
+            _ => filtered.ToList()
+        };
+    }
+
+    private void SetFilter(OrderFilter f)
+    {
+        filter = f;
+        <span class="err">❌</span> <span class="cm">// Ohne diese Methode aktualisiert sich die UI nicht</span>
+    }
+}</code></pre>
+    <p>📌 <strong>Fehlend:</strong> (1) <code>!sortAscending</code>. (2) <code>true</code>. (3) <code>StateHasChanged()</code> (optional, da EventCallback den State aktualisiert – aber SetFilter wird nicht von der UI getriggert).</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">@* SortableOrderTable.razor *@</span>
+
+&lt;div class="card shadow"&gt;
+    &lt;div class="card-header d-flex justify-content-between align-items-center"&gt;
+        &lt;span class="fw-bold"&gt;@Title&lt;/span&gt;
+        &lt;div class="btn-group btn-group-sm"&gt;
+            &lt;button class="btn @(filter == OrderFilter.All ? "btn-primary" : "btn-outline-primary")"
+                    @onclick="() => SetFilter(OrderFilter.All)"&gt;Alle&lt;/button&gt;
+            &lt;button class="btn @(filter == OrderFilter.Buy ? "btn-success" : "btn-outline-success")"
+                    @onclick="() => SetFilter(OrderFilter.Buy)"&gt;Ankauf&lt;/button&gt;
+            &lt;button class="btn @(filter == OrderFilter.Sell ? "btn-danger" : "btn-outline-danger")"
+                    @onclick="() => SetFilter(OrderFilter.Sell)"&gt;Verkauf&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class="card-body"&gt;
+        @if (GetProcessedOrders().Count == 0)
+        {
+            &lt;p class="text-muted text-center py-2"&gt;Keine passenden Eintr&amp;auml;ge&lt;/p&gt;
+        }
+        else
+        {
+            &lt;div class="table-responsive"&gt;
+                &lt;table class="table table-hover mb-0"&gt;
+                    &lt;thead class="table-dark"&gt;
+                        &lt;tr&gt;
+                            &lt;th @onclick="() => SortBy("price")" role="button"&gt;
+                                Preis @GetSortIcon("price")&lt;/th&gt;
+                            &lt;th @onclick="() => SortBy("volume")" role="button"&gt;
+                                Volumen @GetSortIcon("volume")&lt;/th&gt;
+                            &lt;th @onclick="() => SortBy("type")" role="button"&gt;
+                                Typ @GetSortIcon("type")&lt;/th&gt;
+                            &lt;th @onclick="() => SortBy("location")" role="button"&gt;
+                                Station @GetSortIcon("location")&lt;/th&gt;
+                        &lt;/tr&gt;
+                    &lt;/thead&gt;
+                    &lt;tbody&gt;
+                        @foreach (var order in GetProcessedOrders())
+                        {
+                            &lt;tr class="@(order.IsBuyOrder ? "table-success" : "table-danger")"&gt;
+                                &lt;td class="text-end"&gt;@order.Price.ToString("N2")&lt;/td&gt;
+                                &lt;td class="text-end"&gt;@order.Volume.ToString("N0")&lt;/td&gt;
+                                &lt;td&gt;@(order.IsBuyOrder ? "Ankauf" : "Verkauf")&lt;/td&gt;
+                                &lt;td&gt;@order.Location&lt;/td&gt;
+                            &lt;/tr&gt;
+                        }
+                    &lt;/tbody&gt;
+                &lt;/table&gt;
+            &lt;/div&gt;
+        }
+    &lt;/div&gt;
+&lt;/div&gt;
+
+@code {
+    [Parameter] public string Title { get; set; } = "Marktorder";
+    [Parameter] public List&lt;Order&gt;? Orders { get; set; }
+
+    private string sortColumn = "price";
+    private bool sortAscending = true;
+    private OrderFilter filter = OrderFilter.All;
+
+    private enum OrderFilter { All, Buy, Sell }
+
+    private string GetSortIcon(string column)
+    {
+        if (sortColumn != column) return "";
+        return sortAscending ? "▲" : "▼";
+    }
+
+    private void SortBy(string column)
+    {
+        if (sortColumn == column)
+            sortAscending = !sortAscending;
+        else
+        {
+            sortColumn = column;
+            sortAscending = true;
+        }
+    }
+
+    private List&lt;Order&gt; GetProcessedOrders()
+    {
+        if (Orders == null) return new();
+
+        var filtered = filter switch
+        {
+            OrderFilter.Buy => Orders.Where(o => o.IsBuyOrder),
+            OrderFilter.Sell => Orders.Where(o => !o.IsBuyOrder),
+            _ => Orders
+        };
+
+        return (sortColumn, sortAscending) switch
+        {
+            ("price", true) => filtered.OrderBy(o => o.Price).ToList(),
+            ("price", false) => filtered.OrderByDescending(o => o.Price).ToList(),
+            ("volume", true) => filtered.OrderBy(o => o.Volume).ToList(),
+            ("volume", false) => filtered.OrderByDescending(o => o.Volume).ToList(),
+            ("location", true) => filtered.OrderBy(o => o.Location).ToList(),
+            ("location", false) => filtered.OrderByDescending(o => o.Location).ToList(),
+            ("type", true) => filtered.OrderBy(o => o.IsBuyOrder).ToList(),
+            ("type", false) => filtered.OrderByDescending(o => o.IsBuyOrder).ToList(),
+            _ => filtered.ToList()
+        };
+    }
+
+    private void SetFilter(OrderFilter f)
+    {
+        filter = f;
+    }
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li>Verwende <code>switch (sortColumn)</code> im <code>@code</code>-Block, um die passende Property zu sortieren.</li>
+    <li>Sortiere mit LINQ: <code>Orders.Where(f).OrderBy(x => ...)</code> und rufe <code>.ToList()</code> auf, damit die Sortierung nur einmal berechnet wird.</li>
+    <li>Der aktive Filter-Button sollte optisch hervorgehoben sein (z.B. <code>btn-primary</code> vs <code>btn-outline-primary</code>).</li>
+    <li>Unicode-Dreiecke: <code>&amp;#x25B2;</code> (▲) und <code>&amp;#x25BC;</code> (▼).</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Klick auf Spaltenkopf sortiert die Tabelle (auf-/absteigend wechselnd)</li>
+    <li>Aktive Sortierspalte zeigt ▲ oder ▼ an</li>
+    <li>Filter-Buttons (Alle/Buy/Sell) filtern die Tabelle korrekt</li>
+    <li>Filter und Sortierung kombinieren: erst filtern, dann sortieren</li>
+    <li>Die ursprüngliche Parameter-Liste wird nicht verändert</li>
+    <li>Bei leerem Filterergebnis erscheint eine Hinweismeldung</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="05-table-einfach.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="07-live-search.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>
