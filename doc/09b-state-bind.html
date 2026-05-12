@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 09b — Component State mit @bind</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="09-component-state.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="10-theme-problem.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 09b</div>
+  <h1>Component State mit <span class="hl">@bind-Value</span></h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du löst dieselbe Aufgabe wie in <strong>09</strong>, aber mit Two-Way-Component-Binding (<code>@bind-Value</code>). Die Parent-Komponente verdrahtet keine EventHandler mehr – <code>@bind</code> schreibt direkt in die Properties.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>@bind-{Property}</code>
+    <code>@bind-Value</code>
+    <code>[Parameter] + EventCallback</code>
+    <code>Two-Way-Component-Binding</code>
+    <code>Parent→Child ohne Handler</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle eine Seite <code>Calculator.razor</code> – sie ist der "Controller".</li>
+    <li><span class="step">2.</span> Baue die Komponenten ein – aber nutze <code>@bind-Value</code> statt manueller EventCallback-Verdrahtung.</li>
+    <li><span class="step">3.</span> Jede Child-Komponente muss zwei Dinge bereitstellen:
+      <ul>
+        <li>Einen <code>[Parameter]</code> für den Wert (z.B. <code>Value</code>, <code>SelectedCategory</code>)</li>
+        <li>Einen <code>EventCallback&lt;T&gt;</code> mit dem Namen <code>{Property}Changed</code> (z.B. <code>ValueChanged</code>)</li>
+      </ul>
+    </li>
+    <li><span class="step">4.</span> Der Parent hat <strong>keine</strong> Handler-Methoden mehr – nur noch Properties und die Berechnungslogik.</li>
+    <li><span class="step">5.</span> Verwende <code>OnParametersSet</code>, um auf Änderungen zu reagieren und das Ergebnis zu berechnen.</li>
+  </ol>
+</div>
+
+<div class="box note">
+  <h2>📌 Der Unterschied zu 09</h2>
+  <p>In <strong>09</strong> hat der Parent für jedes Child einen Handler (<code>HandleCategoryChanged</code>, <code>HandleQuantityChanged</code>, …). In <strong>09b</strong> schreibt <code>@bind-Value</code> direkt ins Property – <code>OnParametersSet</code> triggert die Berechnung automatisch.</p>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – @bind-{Property} in der Praxis</summary>
+  <div class="body">
+    <p>So funktioniert Two-Way-Component-Binding:</p>
+    <pre><code><span class="cm">// Child-Komponente muss bereitstellen:</span>
+[Parameter]
+public string SelectedCategory { get; set; } = "";
+
+[Parameter]
+public EventCallback&lt;string&gt; <span class="hl">SelectedCategoryChanged</span> { get; set; }
+
+<span class="cm">// Parent nutzt @bind:</span>
+&lt;CategorySelect @bind-SelectedCategory="selectedCategory" /&gt;
+
+<span class="cm">// Blazor erzeugt daraus:</span>
+&lt;CategorySelect SelectedCategory="selectedCategory"
+                SelectedCategoryChanged="(...) => selectedCategory = ..." /&gt;</code></pre>
+    <p>💡 Der Name des EventCallback <strong>muss</strong> <code>{Property}Changed</code> lauten – Blazor sucht automatisch danach.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Vaterlösung – Parent-Seite (Code-Gerüst)</summary>
+  <div class="body">
+    <p>Vergleiche: <strong>09 (manuell)</strong> vs. <strong>09b (@bind)</strong>:</p>
+    <pre><code><span class="cm">// 09 — manuelle Handler</span>
+&lt;CategorySelect OnCategoryChanged="HandleCategory" /&gt;
+&lt;QuantityInput OnQuantityChanged="HandleQuantity" /&gt;
+&lt;DualInput OnValueChanged="HandleFee" /&gt;
+
+@code {
+    private async Task HandleCategory(string c) { selectedCategory = c; Recalc(); }
+    private async Task HandleQuantity(long q)  { quantity = q; Recalc(); }
+    private async Task HandleFee(decimal f)    { fee = f; Recalc(); }
+}
+
+<span class="cm">// 09b — @bind schreibt direkt</span>
+&lt;CategorySelect @bind-SelectedCategory="selectedCategory" /&gt;
+&lt;QuantityInput @bind-Value="quantity" /&gt;
+&lt;DualInput @bind-Value="fee" /&gt;
+
+@code {
+    protected override void OnParametersSet()
+    {
+        <span class="cm">// Wird nach jeder @bind-Aktualisierung aufgerufen</span>
+        Recalc();
+    }
+}</code></pre>
+    <p>📌 <strong>Voraussetzung:</strong> Die Child-Komponenten müssen auf Two-Way-Parameter umgestellt sein. Siehe Hinweis 3.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Erforderliche Child-Schnittstellen</summary>
+  <div class="body">
+    <p>Jede Child-Komponente braucht zusätzlich zu ihrem bisherigen Code einen Two-Way-Parameter:</p>
+    <pre><code><span class="cm">// CategorySelect (Aufgabe 02) — erweitert</span>
+[Parameter] public string SelectedCategory { get; set; } = "";
+[Parameter] public EventCallback&lt;string&gt; SelectedCategoryChanged { get; set; }
+
+<span class="cm">// Im Handler: beide Callbacks feuern</span>
+await OnCategoryChanged.InvokeAsync(val);
+await SelectedCategoryChanged.InvokeAsync(val);
+
+<span class="cm">// QuantityInput (Aufgabe 03) — erweitert</span>
+[Parameter] public long Value { get; set; }
+[Parameter] public EventCallback&lt;long&gt; ValueChanged { get; set; }
+
+<span class="cm">// DualInput (Aufgabe 04) — erweitert</span>
+[Parameter] public decimal Value { get; set; }
+[Parameter] public EventCallback&lt;decimal&gt; ValueChanged { get; set; }
+
+<span class="cm">// Parent-Seite Calculator.razor</span>
+&lt;CategorySelect @bind-SelectedCategory="selectedCategory" /&gt;
+&lt;QuantityInput @bind-Value="quantity" /&gt;
+&lt;DualInput @bind-Value="fee" /&gt;
+
+@code {
+    private string selectedCategory = "";
+    private long quantity;
+    private decimal fee = 2.5m;
+    private decimal? result;
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(selectedCategory) && quantity > 0)
+            result = quantity * (1 + fee / 100);
+    }
+}</code></pre>
+    <p>💡 Die alten EventCallback-Parameter (<code>OnCategoryChanged</code>, <code>OnQuantityChanged</code>, …) bleiben erhalten – die Komponente kann <strong>beide</strong> Wege unterstützen.</p>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li><code>@bind-{Property}</code> funktioniert nur, wenn das Child einen <code>EventCallback&lt;T&gt;</code> mit dem Namen <code>{Property}Changed</code> bereitstellt.</li>
+    <li><code>OnParametersSet</code> wird nach jeder Parameter-Änderung aufgerufen – auch nach <code>@bind</code>-Updates.</li>
+    <li>Du kannst alte (<code>OnCategoryChanged</code>) und neue (<code>SelectedCategoryChanged</code>) Callbacks parallel unterstützen – beide feuern im selben Handler.</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Parent verwendet <code>@bind-{Property}</code> für alle Child-Komponenten</li>
+    <li>Keine manuellen Handler-Methoden im Parent</li>
+    <li>Berechnung läuft automatisch über <code>OnParametersSet</code></li>
+    <li>Child-Komponenten stellen zusätzlich <code>{Property}Changed</code>-Callbacks bereit</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="09-component-state.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="10-theme-problem.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>
