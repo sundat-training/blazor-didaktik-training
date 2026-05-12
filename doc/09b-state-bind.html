@@ -61,8 +61,43 @@
 </div>
 
 <div class="box note">
-  <h2>📌 Der Unterschied zu 09</h2>
-  <p>In <strong>09</strong> hat der Parent für jedes Child einen Handler (<code>HandleCategoryChanged</code>, <code>HandleQuantityChanged</code>, …). In <strong>09b</strong> schreibt <code>@bind-Value</code> direkt ins Property – <code>OnParametersSet</code> triggert die Berechnung automatisch.</p>
+  <h2>📌 Der Unterschied zu 09 — Trade-off</h2>
+
+  <table style="width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:12px;">
+    <thead>
+      <tr style="border-bottom:2px solid var(--border);">
+        <th style="padding:8px;text-align:left;">Aspekt</th>
+        <th style="padding:8px;text-align:left;">09 (manuell)</th>
+        <th style="padding:8px;text-align:left;">09b (@bind-Value)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px;font-weight:600;">Parent-Code</td>
+        <td style="padding:8px;">3 Handler-Methoden</td>
+        <td style="padding:8px;">0 Handler, dafür <code>OnParametersSet</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px;font-weight:600;">Child-Code</td>
+        <td style="padding:8px;">1 Callback pro Child</td>
+        <td style="padding:8px;">2 Callbacks pro Child (alter + neuer)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px;font-weight:600;">Datenfluss</td>
+        <td style="padding:8px;">Explizit: EventCallback → Handler → Property</td>
+        <td style="padding:8px;">Implizit: Namenskonvention <code>XxxChanged</code></td>
+      </tr>
+      <tr>
+        <td style="padding:8px;font-weight:600;">Lernkurve</td>
+        <td style="padding:8px;">Klar und direkt</td>
+        <td style="padding:8px;">Erfordert Wissen über Blazor-Konventionen</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p><strong>⭐ Empfehlung: Variante 09 (manuell) für diese Übung.</strong> Klarer Datenfluss, weniger Child-Boilerplate, einfacher nachvollziehbar.</p>
+
+  <p>⚠️ <strong>Achtung bei kaskadiertem Two-Way-Binding:</strong> Sobald du <code>@bind-Value</code> über mehrere Ebenen verschachtelst (Parent → Child → Grandchild), wird der Datenfluss undurchschaubar. Wer hat den State zuletzt geändert? Welches <code>OnParametersSet</code> läuft gerade? Der implizite <code>XxxChanged</code>-Mechanismus macht Debugging zum Ratespiel. Manuelle EventCallbacks bleiben hier die wartbarere Wahl.</p>
 </div>
 
 <details class="collapsible hint-1">
