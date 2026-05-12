@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aufgabe 01 — Einfaches Select</title>
+  <title>Aufgabe 01a — Manuelles Select</title>
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -16,21 +16,19 @@
       <span class="sep">·</span>
       <a href="#">← Vorherige</a>
       <span class="sep">·</span>
-      <a href="02-select-nested.html">Nächste →</a>
+      <a href="01b-select-bind.html">Nächste →</a>
     </div>
   </div>
 </nav>
 
-<div class="container">
-
 <div class="page-header">
-  <div class="num">Aufgabe 01</div>
-  <h1>Einfaches Select</h1>
+  <div class="num">Aufgabe 01a</div>
+  <h1>Manuelles Select</h1>
 </div>
 
 <div class="box goal">
   <h2>🎯 Lernziel</h2>
-  <p>Du erstellst eine Komponente mit einem <code>&lt;select&gt;</code>-Dropdown, das eine Liste fester Optionen anzeigt. Du lernst die verschiedenen Arten der Datenbindung in Blazor kennen: <code>@bind</code> für bidirektionale und <code>@onchange</code> für einseitige Bindung mit Aktion.</p>
+  <p>Du erstellst eine Komponente mit einem <code>&lt;select&gt;</code>-Dropdown und steuerst es manuell über <code>@onchange</code>. Jede Auswahl wird per <code>EventCallback&lt;string&gt;</code> an die Parent-Komponente gemeldet.</p>
 </div>
 
 <div class="box concepts">
@@ -38,8 +36,8 @@
   <div class="concept-list">
     <code>&lt;select&gt;</code>
     <code>&lt;option&gt;</code>
-    <code>@bind</code>
     <code>@onchange</code>
+    <code>ChangeEventArgs</code>
     <code>foreach</code>
     <code>EventCallback&lt;T&gt;</code>
   </div>
@@ -50,9 +48,9 @@
   <ol>
     <li><span class="step">1.</span> Erstelle eine neue Blazor-Komponente <code>CategorySelector.razor</code>.</li>
     <li><span class="step">2.</span> Definiere ein festes Array von Kategorien als Komponenten-Feld (z.B. <code>"Ordinary"</code>, <code>"Compressed"</code>, <code>"Moon"</code>, <code>"Compressed Moon"</code>).</li>
-    <li><span class="step">3.</span> Baue ein <code>&lt;select&gt;</code>, das die Kategorien als <code>&lt;option&gt;</code> ausgibt. Verwende <code>@bind</code> zur Bindung an eine <code>string selectedCategory</code>-Variable.</li>
+    <li><span class="step">3.</span> Baue ein <code>&lt;select&gt;</code> mit <code>@onchange="HandleChange"</code> und <code>value="@selectedCategory"</code>.</li>
     <li><span class="step">4.</span> Zeige die gewählte Kategorie unterhalb des Dropdowns an.</li>
-    <li><span class="step">5.</span> Erweitere die Komponente: Gib die Auswahl per <code>EventCallback&lt;string&gt;</code> nach oben an die Parent-Komponente weiter.</li>
+    <li><span class="step">5.</span> Gib die Auswahl per <code>EventCallback&lt;string&gt;</code> nach oben an die Parent-Komponente weiter.</li>
   </ol>
 </div>
 
@@ -60,25 +58,19 @@
   <summary>💡 Hinweise – Code-Schnipsel</summary>
   <div class="body">
     <p>Die wichtigsten Bausteine für diese Aufgabe:</p>
-    <pre><code><span class="cm">// Bidirektionale Bindung (vereinfacht):</span>
-&lt;select @bind="selectedCategory"&gt;
+    <pre><code><span class="cm">// Manuelle Steuerung mit @onchange:</span>
+[Parameter]
+public EventCallback&lt;string&gt; OnCategoryChanged { get; set; }
+
+&lt;select @onchange="HandleChange" value="@selectedCategory"&gt;
     &lt;option value="" disabled&gt;Bitte wählen...&lt;/option&gt;
     @foreach (var cat in categories)
     {
         &lt;option value="@cat"&gt;@cat&lt;/option&gt;
     }
-&lt;/select&gt;
-
-<span class="cm">// Manuelle Steuerung mit EventCallback:</span>
-[Parameter]
-<span class="hl">public EventCallback&lt;string&gt; OnCategoryChanged { get; set; }</span>
-
-<span class="cm">// Mit @onchange statt @bind (für Callback):</span>
-&lt;select @onchange="<span class="hl">HandleChange</span>" value="@selectedCategory"&gt;
-    ...
 &lt;/select&gt;</code></pre>
-    <p>💡 <code>@bind</code> ist syntaktischer Zucker für <code>value</code> + <code>@onchange</code>. Sobald du <code>@onchange</code> selbst setzt, überschreibst du <code>@bind</code>.</p>
-    <p>💡 Ein <code>EventCallback&lt;T&gt;</code> wird aus der Parent-Komponente befüllt: <code>&lt;CategorySelector OnCategoryChanged="@HandleAuswahl" /&gt;</code>.</p>
+    <p>💡 <code>@bind</code> ist syntaktischer Zucker für <code>value</code> + <code>@onchange</code>. Hier nutzen wir die manuelle Variante, um bei jeder Änderung einen Callback auszulösen.</p>
+    <p>💡 <code>ChangeEventArgs</code> liefert den neuen Wert über <code>e.Value?.ToString()</code>.</p>
   </div>
 </details>
 
@@ -182,9 +174,9 @@
   <h2>💡 Tipps</h2>
   <ul>
     <li>Ein Platzhalter-Eintrag ("Bitte wählen...") braucht einen leeren <code>value=""</code> und <code>disabled selected</code>.</li>
-    <li><code>@bind</code> ist syntaktischer Zucker für <code>value</code> + <code>@onchange</code>. Wenn du bei jeder Auswahl eine Aktion auslösen willst, brauchst du <code>@onchange</code> manuell.</li>
+    <li><code>@bind</code> ist syntaktischer Zucker für <code>value</code> + <code>@onchange</code>. Wenn du beides manuell setzt, hast du die volle Kontrolle.</li>
+    <li><code>ChangeEventArgs e</code> liefert <code>e.Value</code> – das ist der reine <code>value</code> des gewählten <code>&lt;option&gt;</code>.</li>
     <li>Blazor rendert bei jeder State-Änderung neu – das ist erwünscht und kein Fehler.</li>
-    <li>Gib der Komponente einen <code>[Parameter]</code> für den Titel, damit sie wiederverwendbar wird.</li>
   </ul>
 </div>
 
@@ -203,9 +195,7 @@
 <div class="page-footer">
   <a href="#" class="disabled">← Vorherige</a>
   <a href="index.html">Übersicht</a>
-  <a href="02-select-nested.html">Nächste →</a>
-</div>
-
+  <a href="01b-select-bind.html">Nächste →</a>
 </div>
 
 </body>
