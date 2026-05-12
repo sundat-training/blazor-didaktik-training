@@ -170,6 +170,34 @@ body {
   margin-top: 12px;
 }
 
+/* Problem row spanning full grid */
+.problem-row {
+  grid-column: 1 / -1;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  text-decoration: none;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: box-shadow 0.15s;
+}
+.problem-row:hover { box-shadow: var(--shadow); }
+.problem-row .label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.problem-row h3 { font-size: 1rem; margin: 0; }
+.problem-row p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
 /* Tag pills */
 .tag {
   font-size: 0.7rem;
