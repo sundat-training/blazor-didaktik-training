@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 07b — Live-Suche mit @bind</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="07-live-search.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="08-api-problem.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 07b</div>
+  <h1>Live-Suche / Autocomplete mit <span class="hl">@bind</span></h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du löst dieselbe Aufgabe wie in <strong>07</strong>, aber mit <code>@bind</code> + <code>@bind:event="oninput"</code> + <code>@bind:after</code>. Die Filterung läuft automatisch nach jeder Bindungs-Aktualisierung – kein manueller Event-Handler nötig.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>@bind:event="oninput"</code>
+    <code>@bind:after</code>
+    <code>case-insensitive Filter</code>
+    <code>position: absolute</code>
+    <code>Dropdown sichtbar/unsichtbar</code>
+    <code>EventCallback&lt;Item&gt;</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle <code>SearchSelect.razor</code> mit <code>&lt;input&gt;</code> + <code>@bind="searchText" @bind:event="oninput" @bind:after="FilterItems"</code>.</li>
+    <li><span class="step">2.</span> Bei jeder Eingabe filtert <code>FilterItems()</code> die <code>[Parameter] List&lt;string&gt; Items</code> case-insensitive.</li>
+    <li><span class="step">3.</span> Zeige die Treffer als <code>&lt;button&gt;</code>-Liste im absolut positionierten Dropdown.</li>
+    <li><span class="step">4.</span> Klick auf ein Ergebnis setzt <code>searchText</code> und feuert <code>EventCallback&lt;string&gt;</code>.</li>
+    <li><span class="step">5.</span> Erweitere auf Objekte mit <code>DisplayName</code> + <code>Value</code>.</li>
+  </ol>
+</div>
+
+<div class="box note">
+  <h2>📌 Der Unterschied zu 07</h2>
+  <p>In <strong>07</strong> nutzt du <code>@oninput="HandleInput"</code> + manuelles <code>value</code>. Hier übernimmt <code>@bind</code> das Auslesen des Input-Werts – <code>@bind:after="FilterItems"</code> kümmert sich um die Filterung. Kein <code>ChangeEventArgs</code>, kein <code>e.Value?.ToString()</code>.</p>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Der Kern der Lösung:</p>
+    <pre><code><span class="cm">// @bind + @bind:after für Live-Filter:</span>
+&lt;input @bind="searchText"
+       @bind:event="oninput"
+       @bind:after="FilterItems"
+       placeholder="Suchen..." /&gt;
+
+@if (filtered.Any())
+{
+    &lt;div class="dropdown"&gt;
+        @foreach (var item in filtered)
+        {
+            &lt;button @onclick="() => SelectItem(item)"&gt;@item&lt;/button&gt;
+        }
+    &lt;/div&gt;
+}
+
+@code {
+    [Parameter] public List&lt;string&gt; Items { get; set; } = new();
+    [Parameter] public EventCallback&lt;string&gt; OnItemSelected { get; set; }
+
+    private string searchText = "";
+    private List&lt;string&gt; filtered = new();
+
+    private async Task FilterItems()
+    {
+        filtered = string.IsNullOrWhiteSpace(searchText)
+            ? new()
+            : Items.Where(i =&gt; i.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                   .ToList();
+    }
+
+    private async Task SelectItem(string item)
+    {
+        searchText = item;
+        filtered = new();
+        await OnItemSelected.InvokeAsync(item);
+    }
+}</code></pre>
+    <p>💡 <code>@bind:after</code> feuert nach jeder Aktualisierung von <code>searchText</code> – perfekt für Live-Filter.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen:</p>
+    <pre><code><span class="cm">@* SearchSelect.razor *@</span>
+
+&lt;div style="position:relative"&gt;
+    &lt;input @bind="searchText"
+           @bind:event="oninput"
+           <span class="err">❌</span>
+           placeholder="Item suchen..." /&gt;
+
+    @if (filtered.Any())
+    {
+        &lt;div class="dropdown"&gt;
+            @foreach (var item in filtered)
+            {
+                &lt;button <span class="err">❌</span>&gt;@item&lt;/button&gt;
+            }
+        &lt;/div&gt;
+    }
+&lt;/div&gt;
+
+@code {
+    [Parameter] public List&lt;string&gt; Items { get; set; } = new();
+    [Parameter] public EventCallback&lt;string&gt; OnItemSelected { get; set; }
+
+    private string searchText = "";
+    private List&lt;string&gt; filtered = new();
+
+    private <span class="err">❌</span> FilterItems()
+    {
+        <span class="err">❌</span>
+    }
+
+    private async Task SelectItem(string item)
+    {
+        <span class="err">❌</span>
+    }
+}</code></pre>
+    <p>📌 <strong>Fehlend:</strong> (1) <code>@bind:after="FilterItems"</code>. (2) <code>@onclick="() => SelectItem(item)"</code>. (3) Signatur und Rumpf von <code>FilterItems</code>. (4) Rumpf von <code>SelectItem</code>.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">@* SearchSelect.razor *@</span>
+
+&lt;div style="position:relative"&gt;
+    &lt;input type="text" class="form-control"
+           @bind="searchText"
+           @bind:event="oninput"
+           @bind:after="FilterItems"
+           placeholder="Item suchen..." /&gt;
+
+    @if (filtered.Any())
+    {
+        &lt;div class="dropdown-menu show" style="position:absolute;width:100%;z-index:1000;
+             max-height:300px;overflow-y:auto"&gt;
+            @foreach (var item in filtered)
+            {
+                &lt;button class="dropdown-item" @onclick="() => SelectItem(item)"
+                        type="button"&gt;@item&lt;/button&gt;
+            }
+        &lt;/div&gt;
+    }
+&lt;/div&gt;
+
+@code {
+    [Parameter] public List&lt;string&gt; Items { get; set; } = new();
+    [Parameter] public EventCallback&lt;string&gt; OnItemSelected { get; set; }
+
+    private string searchText = "";
+    private List&lt;string&gt; filtered = new();
+
+    private async Task FilterItems()
+    {
+        filtered = string.IsNullOrWhiteSpace(searchText)
+            ? new()
+            : Items.Where(i =&gt; i.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                   .ToList();
+    }
+
+    private async Task SelectItem(string item)
+    {
+        searchText = item;
+        filtered = new();
+        await OnItemSelected.InvokeAsync(item);
+    }
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li><code>@bind:event="oninput"</code> aktualisiert bei jedem Tastendruck – nötig für Live-Suche.</li>
+    <li>Das Dropdown schließt sich, wenn <code>filtered</code> leer ist oder ein Item ausgewählt wurde.</li>
+    <li>Für Klick-außerhalb-schließen: umschließe Input + Dropdown mit einem <code>@onfocusout</code>-Container oder nutze <code>@onblur</code> mit <code>setTimeout</code>-ähnlicher Logik.</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Dropdown zeigt gefilterte Vorschläge während der Eingabe</li>
+    <li>Filter ist case-insensitive</li>
+    <li>Klick auf einen Vorschlag setzt den Input-Text und feuert Callback</li>
+    <li>Es wird <code>@bind</code> + <code>@bind:event="oninput"</code> + <code>@bind:after</code> verwendet</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="07-live-search.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="08-api-problem.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>
