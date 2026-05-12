@@ -65,6 +65,25 @@
   </ol>
 </div>
 
+<div class="box" style="border-left:4px solid var(--accent);">
+  <h2>📋 Beispieldaten zum Kopieren</h2>
+  <pre><code><span class="cm">// Daten aus Aufgabe 02 (Kategorien + Items)</span>
+private Dictionary&lt;string, List&lt;string&gt;&gt; data = new()
+{
+    ["Ordinary"] = new() { "Veldspar", "Scordite", "Pyroxeres", "Plagioclase" },
+    ["Compressed"] = new() { "Compressed Veldspar", "Compressed Scordite" },
+};
+
+<span class="cm">// State der Calculator-Seite</span>
+private string? selectedCategory;
+private string? selectedItem;
+private long quantity;
+private decimal fee = 2.5m;
+private decimal? result;
+private bool isLoading;
+private string? errorMessage;</code></pre>
+</div>
+
 <details class="collapsible hint-1">
   <summary>💡 Hinweise – Code-Schnipsel</summary>
   <div class="body">

@@ -58,6 +58,29 @@
   </ol>
 </div>
 
+<div class="box" style="border-left:4px solid var(--accent);">
+  <h2>📋 Beispieldaten zum Kopieren</h2>
+  <pre><code><span class="cm">// Einfache Variante: List&lt;string&gt;</span>
+private List&lt;string&gt; items = new()
+{
+    "Veldspar", "Scordite", "Pyroxeres", "Plagioclase", "Omber",
+    "Kernite", "Jaspet", "Hemorphite", "Hedbergite", "Gneiss",
+    "Dark Ochre", "Spodumain", "Crokite", "Bistot", "Arkonor",
+    "Mercoxit", "Morphite", "Zydrine", "Megacyte", "Nocxium",
+};
+
+<span class="cm">// Erweiterte Variante: Objekte mit DisplayName + Value</span>
+public record Item(string DisplayName, string Value);
+
+private List&lt;Item&gt; itemObjects = new()
+{
+    new("Veldspar", "veldspar"),
+    new("Scordite", "scordite"),
+    new("Pyroxeres", "pyroxeres"),
+    // ...
+};</code></pre>
+</div>
+
 <details class="collapsible hint-1">
   <summary>💡 Hinweise – Code-Schnipsel</summary>
   <div class="body">

@@ -58,6 +58,17 @@
   </ol>
 </div>
 
+<div class="box" style="border-left:4px solid var(--accent);">
+  <h2>📋 Beispieldaten zum Kopieren</h2>
+  <pre><code>private Dictionary&lt;string, List&lt;string&gt;&gt; data = new()
+{
+    ["Ordinary"] = new() { "Veldspar", "Scordite", "Pyroxeres", "Plagioclase" },
+    ["Compressed"] = new() { "Compressed Veldspar", "Compressed Scordite", "Compressed Pyroxeres" },
+    ["Moon"] = new() { "Bitumens", "Carnotite", "Cobaltite" },
+    ["Compressed Moon"] = new() { "Compressed Bitumens", "Compressed Carnotite" },
+};</code></pre>
+</div>
+
 <div class="box note">
   <h2>📌 Der Unterschied zu 02a</h2>
   <p>In <strong>02a</strong> nutzen beide Childs <code>@onchange</code> + <code>value</code> + <code>ChangeEventArgs</code>. Hier setzen beide auf <code>@bind</code> + <code>@bind:after</code> mit Inline-Lambda – weniger Boilerplate pro Komponente, gleiche Schnittstelle nach außen.</p>

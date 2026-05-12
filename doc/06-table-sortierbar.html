@@ -57,6 +57,26 @@
   </ol>
 </div>
 
+<div class="box" style="border-left:4px solid var(--accent);">
+  <h2>📋 Beispieldaten zum Kopieren</h2>
+  <pre><code><span class="cm">// Datenmodell (identisch mit Aufgabe 05)</span>
+public record Order(decimal Price, long Volume, bool IsBuyOrder, string Location);
+
+<span class="cm">// Beispieldaten</span>
+private List&lt;Order&gt; orders = new()
+{
+    new(45.20m, 1000, true, "Jita"),
+    new(47.80m, 500, false, "Amarr"),
+    new(44.90m, 2500, true, "Dodixie"),
+    new(48.10m, 750, false, "Jita"),
+    new(45.50m, 1200, true, "Rens"),
+    new(49.00m, 300, false, "Hek"),
+};
+
+<span class="cm">// Filter-Enum</span>
+public enum OrderFilter { All, Buy, Sell }</code></pre>
+</div>
+
 <details class="collapsible hint-1">
   <summary>💡 Hinweise – Code-Schnipsel</summary>
   <div class="body">

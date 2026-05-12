@@ -67,6 +67,45 @@
   </ol>
 </div>
 
+<div class="box" style="border-left:4px solid var(--accent);">
+  <h2>📋 Beispieldaten zum Kopieren</h2>
+  <pre><code><span class="cm">// C#-Datenmodell</span>
+public record OrderItem(int Id, string Name, decimal Price, long Volume);
+
+<span class="cm">// JSON-Response (von https://api.example.com/orders)</span>
+{
+    "items": [
+        { "id": 1, "name": "Veldspar", "price": 45.20, "volume": 1000000 },
+        { "id": 2, "name": "Scordite", "price": 32.80, "volume": 800000 }
+    ],
+    "page": 1,
+    "totalPages": 3
+}
+
+<span class="cm">// ApiService-Interface + Implementierung</span>
+public interface IApiService
+{
+    Task&lt;List&lt;OrderItem&gt;&gt; GetOrdersAsync();
+}
+
+public class ApiService : IApiService
+{
+    private readonly HttpClient _http;
+    public ApiService(HttpClient http) =&gt; _http = http;
+
+    public async Task&lt;List&lt;OrderItem&gt;&gt; GetOrdersAsync()
+    {
+        var response = await _http.GetAsync("orders");
+        response.EnsureSuccessStatusCode();
+        var json = await response.Content.ReadAsStringAsync();
+        var page = JsonSerializer.Deserialize&lt;PageDto&lt;OrderItem&gt;&gt;(json);
+        return page?.Items ?? new();
+    }
+
+    private record PageDto&lt;T&gt;(List&lt;T&gt; Items, int Page, int TotalPages);
+}</code></pre>
+</div>
+
 <details class="collapsible hint-1">
   <summary>💡 Hinweise – Code-Schnipsel</summary>
   <div class="body">
