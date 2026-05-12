@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 04b — Gekoppelte Inputs mit @bind</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="04-dual-input.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="05-table-problem.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 04b</div>
+  <h1>Gekoppelte Inputs mit <span class="hl">@bind</span></h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du löst dieselbe Aufgabe wie in <strong>04</strong>, aber mit <code>@bind</code> + <code>@bind:event="oninput"</code> in beiden Inputs. Beide schreiben automatisch in dieselbe <code>value</code>-Variable – kein manueller Sync nötig.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>&lt;input type="range"&gt;</code>
+    <code>&lt;input type="number"&gt;</code>
+    <code>@bind:event="oninput"</code>
+    <code>@bind:after</code>
+    <code>[Parameter] Min/Max/Step</code>
+    <code>EventCallback&lt;decimal&gt;</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle <code>DualInput.razor</code> mit Slider und Number-Input.</li>
+    <li><span class="step">2.</span> Binde beide Inputs an dieselbe <code>decimal value</code> mit <code>@bind</code> + <code>@bind:event="oninput"</code>.</li>
+    <li><span class="step">3.</span> Nutze <code>@bind:after</code> für den <code>EventCallback</code> – ein Lambda reicht.</li>
+    <li><span class="step">4.</span> Füge <code>[Parameter]</code> für <code>Min</code>, <code>Max</code>, <code>Step</code> hinzu.</li>
+    <li><span class="step">5.</span> Zeige den Wert in Prozent-Format (<code>"42,5 %"</code>) an.</li>
+  </ol>
+</div>
+
+<div class="box note">
+  <h2>📌 Der Unterschied zu 04</h2>
+  <p>In <strong>04</strong> hast du zwei separate Handler <code>HandleSlider</code> und <code>HandleNumber</code> gebraucht. Hier reicht <code>@bind</code> – beide Inputs schreiben automatisch in <code>value</code>, <code>@bind:after</code> feuert den Callback. Kein manuelles Sync, kein <code>Math.Round</code>.</p>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Der Kern der Lösung:</p>
+    <pre><code><span class="cm">// Beide Inputs, ein @bind:after:</span>
+[Parameter]
+public EventCallback&lt;decimal&gt; OnValueChanged { get; set; }
+
+&lt;input type="range" @bind="value"
+       @bind:event="oninput"
+       @bind:after="() => OnValueChanged.InvokeAsync(value)" /&gt;
+
+&lt;input type="number" @bind="value"
+       @bind:event="oninput"
+       @bind:after="() => OnValueChanged.InvokeAsync(value)" /&gt;
+
+@code {
+    private decimal value = 50;
+
+    [Parameter] public decimal Min { get; set; } = 0;
+    [Parameter] public decimal Max { get; set; } = 100;
+    [Parameter] public decimal Step { get; set; } = 1;
+}</code></pre>
+    <p>💡 <code>@bind</code> aktualisiert <code>value</code> automatisch bei jeder Eingabe – egal ob Slider oder Number.Field.</p>
+    <p>💡 Der Callback feuert bei <strong>beiden</strong> Inputs, weil jedes <code>@bind:after</code> hat.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen:</p>
+    <pre><code><span class="cm">@* DualInput.razor *@</span>
+
+&lt;div&gt;
+    &lt;input type="range" @bind="value"
+           @bind:event="oninput" <span class="err">❌</span> /&gt;
+    &lt;span&gt;@value.ToString("F1") %&lt;/span&gt;
+    &lt;input type="number" @bind="value"
+           @bind:event="oninput" <span class="err">❌</span> /&gt;
+&lt;/div&gt;
+
+@code {
+    [Parameter]
+    public EventCallback&lt;decimal&gt; OnValueChanged { get; set; }
+
+    [Parameter] public decimal Min { get; set; } = 0;
+    [Parameter] public decimal Max { get; set; } = 100;
+    [Parameter] public decimal Step { get; set; } = 1;
+
+    private decimal value = 50;
+}</code></pre>
+    <p>📌 <strong>Fehlend:</strong> Jeweils <code>@bind:after="() => OnValueChanged.InvokeAsync(value)"</code> in beiden Inputs.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">@* DualInput.razor *@</span>
+
+&lt;div class="d-flex align-items-center gap-3"&gt;
+    &lt;input type="range" class="form-range flex-grow-1"
+           @bind="value" @bind:event="oninput"
+           @bind:after="() => OnValueChanged.InvokeAsync(value)"
+           min="@Min" max="@Max" step="@Step" /&gt;
+
+    &lt;span class="fw-bold text-primary min-w-64 text-center"&gt;
+        @value.ToString("F1", CultureInfo.InvariantCulture) %
+    &lt;/span&gt;
+
+    &lt;input type="number" class="form-control w-25"
+           @bind="value" @bind:event="oninput"
+           @bind:after="() => OnValueChanged.InvokeAsync(value)"
+           min="@Min" max="@Max" step="@Step" /&gt;
+&lt;/div&gt;
+
+@code {
+    [Parameter]
+    public EventCallback&lt;decimal&gt; OnValueChanged { get; set; }
+
+    [Parameter] public decimal Min { get; set; } = 0;
+    [Parameter] public decimal Max { get; set; } = 100;
+    [Parameter] public decimal Step { get; set; } = 0.5m;
+
+    private decimal value = 50;
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li>Da beide Inputs dieselbe <code>value</code> binden, sind sie automatisch synchron – kein manuelles <code>oninput</code> nötig.</li>
+    <li><code>@bind:event="oninput"</code> ist wichtig für den Slider, damit er flüssig reagiert.</li>
+    <li>Der <code>@bind:after</code>-Callback feuert bei beiden Inputs – du musst ihn nicht duplizieren, es reicht dasselbe Lambda.</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Slider und Number-Feld sind jederzeit synchron</li>
+    <li>Slider reagiert flüssig auf Ziehen</li>
+    <li>Number-Feld akzeptiert präzise Werteingabe</li>
+    <li>Die Anzeige zeigt den Wert in Prozent-Format</li>
+    <li>Es wird <code>@bind</code> + <code>@bind:event="oninput"</code> + <code>@bind:after</code> verwendet</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="04-dual-input.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="05-table-problem.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>
