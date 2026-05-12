@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aufgabe 03b — Input mit Validierung & @bind</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container">
+    <span class="nav-title">Blazor Component Training</span>
+    <div class="nav-links">
+      <a href="index.html">Übersicht</a>
+      <span class="sep">·</span>
+      <a href="03-input-validation.html">← Vorherige</a>
+      <span class="sep">·</span>
+      <a href="04-dual-problem.html">Nächste →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="num">Aufgabe 03b</div>
+  <h1>Input mit Validierung & <span class="hl">@bind</span></h1>
+</div>
+
+<div class="box goal">
+  <h2>🎯 Lernziel</h2>
+  <p>Du löst dieselbe Aufgabe wie in <strong>03</strong>, aber mit <code>@bind</code> + <code>@bind:event="oninput"</code> + <code>@bind:after</code>. Du siehst, wie <code>@bind</code> auch bei Live-Validierung mit oninput funktioniert.</p>
+</div>
+
+<div class="box concepts">
+  <h2>🔧 Konzepte</h2>
+  <div class="concept-list">
+    <code>&lt;input type="number"&gt;</code>
+    <code>@bind</code>
+    <code>@bind:event="oninput"</code>
+    <code>@bind:after</code>
+    <code>long.TryParse</code>
+    <code>Conditional Rendering</code>
+    <code>EventCallback&lt;long&gt;</code>
+  </div>
+</div>
+
+<div class="box task-box">
+  <h2>📋 Aufgabe</h2>
+  <ol>
+    <li><span class="step">1.</span> Erstelle <code>QuantityInput.razor</code> mit <code>&lt;input type="number"&gt;</code>.</li>
+    <li><span class="step">2.</span> Binde den Input mit <code>@bind="rawValue" @bind:event="oninput"</code>. Bei jeder Eingabe wird <code>rawValue</code> aktualisiert.</li>
+    <li><span class="step">3.</span> Validiere in <code>@bind:after="Validate"</code>: parse mit <code>long.TryParse()</code>, setze Error-String bei Ungültigkeit.</li>
+    <li><span class="step">4.</span> Zeige den Error-String per Conditional Rendering.</li>
+    <li><span class="step">5.</span> Feuere <code>EventCallback&lt;long&gt;</code> nur bei gültigem Wert.</li>
+    <li><span class="step">6.</span> Füge <code>[Parameter] bool Disabled</code> und <code>[Parameter] long MinValue</code> hinzu.</li>
+  </ol>
+</div>
+
+<div class="box note">
+  <h2>📌 Der Unterschied zu 03</h2>
+  <p>In <strong>03</strong> nutzt du <code>@oninput="HandleInput"</code> + <code>ChangeEventArgs</code>. Hier übernimmt <code>@bind</code> das Auslesen des Werts – <code>@bind:after</code> ruft die Validierung auf. Kein manuelles <code>e.Value?.ToString()</code>, kein separates <code>value=</code>.</p>
+</div>
+
+<details class="collapsible hint-1">
+  <summary>💡 Hinweise – Code-Schnipsel</summary>
+  <div class="body">
+    <p>Die wichtigsten Bausteine:</p>
+    <pre><code><span class="cm">// @bind + @bind:event + @bind:after:</span>
+[Parameter]
+public EventCallback&lt;long&gt; OnQuantityChanged { get; set; }
+
+&lt;input type="number"
+       class="form-control @(errorMessage != null ? "is-invalid" : "")"
+       @bind="rawValue"
+       @bind:event="oninput"
+       @bind:after="Validate"
+       disabled="@Disabled" /&gt;
+
+@if (errorMessage != null)
+{
+    &lt;div class="text-danger small"&gt;@errorMessage&lt;/div&gt;
+}
+
+@code {
+    private string rawValue = "";
+    private string? errorMessage;
+
+    private async Task Validate()
+    {
+        <span class="cm">// rawValue ist hier bereits aktualisiert</span>
+        if (string.IsNullOrWhiteSpace(rawValue)) { ... }
+        if (!long.TryParse(...)) { ... }
+        errorMessage = null;
+        await OnQuantityChanged.InvokeAsync(val);
+    }
+}</code></pre>
+    <p>💡 <code>@bind:event="oninput"</code> sorgt dafür, dass die Bindung bei <strong>jedem</strong> Tastendruck aktualisiert wird (nicht erst beim Verlassen des Feldes).</p>
+  </div>
+</details>
+
+<details class="collapsible hint-2">
+  <summary>🔧 Teil-Lösung – Code-Gerüst</summary>
+  <div class="body">
+    <p>Ergänze die <span class="err">❌</span>-Stellen:</p>
+    <pre><code><span class="cm">@* QuantityInput.razor *@</span>
+
+&lt;div class="mb-3"&gt;
+    &lt;label class="form-label fw-bold"&gt;@Label&lt;/label&gt;
+    &lt;input type="number"
+           class="form-control @(<span class="err">❌</span> ? "is-invalid" : "")"
+           @bind="rawValue"
+           @bind:event="oninput"
+           <span class="err">❌</span>
+           disabled="@Disabled" /&gt;
+    @if (<span class="err">❌</span>)
+    {
+        &lt;div class="text-danger small"&gt;@errorMessage&lt;/div&gt;
+    }
+&lt;/div&gt;
+
+@code {
+    [Parameter] public string Label { get; set; } = "Menge";
+    [Parameter] public long MinValue { get; set; } = 1;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback&lt;long&gt; OnQuantityChanged { get; set; }
+
+    private string rawValue = "";
+    private string? errorMessage;
+
+    private async Task Validate()
+    {
+        <span class="err">❌</span>
+    }
+}</code></pre>
+    <p>📌 <strong>Fehlend:</strong> (1) <code>@bind:after="Validate"</code>. (2) Bedingung für <code>is-invalid</code>. (3) Bedingung für Error-Rendering. (4) Validierungslogik in <code>Validate()</code>.</p>
+  </div>
+</details>
+
+<details class="collapsible hint-3">
+  <summary>🏁 Vollständige Lösung</summary>
+  <div class="body">
+    <pre><code><span class="cm">@* QuantityInput.razor *@</span>
+
+&lt;div class="mb-3"&gt;
+    &lt;label class="form-label fw-bold"&gt;@Label&lt;/label&gt;
+    &lt;input type="number"
+           class="form-control @(errorMessage != null ? "is-invalid" : "")"
+           @bind="rawValue"
+           @bind:event="oninput"
+           @bind:after="Validate"
+           disabled="@Disabled"
+           min="@MinValue" /&gt;
+    @if (errorMessage != null)
+    {
+        &lt;div class="text-danger small mt-1"&gt;@errorMessage&lt;/div&gt;
+    }
+&lt;/div&gt;
+
+@code {
+    [Parameter] public string Label { get; set; } = "Menge";
+    [Parameter] public long MinValue { get; set; } = 1;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback&lt;long&gt; OnQuantityChanged { get; set; }
+
+    private string rawValue = "";
+    private string? errorMessage;
+
+    private async Task Validate()
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            errorMessage = "Feld darf nicht leer sein";
+            return;
+        }
+
+        if (!long.TryParse(rawValue, NumberStyles.Integer,
+            CultureInfo.InvariantCulture, out var val))
+        {
+            errorMessage = "Bitte eine gültige ganze Zahl eingeben";
+            return;
+        }
+
+        if (val &lt; MinValue)
+        {
+            errorMessage = $"Wert muss &gt;= {MinValue} sein";
+            return;
+        }
+
+        errorMessage = null;
+        await OnQuantityChanged.InvokeAsync(val);
+    }
+}</code></pre>
+    <pre><code><span class="cm">@* QuantityInput.razor.css *@</span>
+::deep .is-invalid {
+    border-color: #dc3545;
+}
+::deep .is-invalid:focus {
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
+}</code></pre>
+  </div>
+</details>
+
+<div class="box tip">
+  <h2>💡 Tipps</h2>
+  <ul>
+    <li><code>@bind:event="oninput"</code> aktualisiert bei jedem Tastendruck – nötig für Live-Validierung.</li>
+    <li>Im Gegensatz zu 03 gibt es kein <code>ChangeEventArgs</code> – der Wert liegt direkt in <code>rawValue</code>.</li>
+    <li>Leeres Feld = Fehler. Entweder du blockierst es oder erlaubst es als "noch nichts eingegeben".</li>
+  </ul>
+</div>
+
+<div class="box accept">
+  <h2>✅ Akzeptanzkriterien</h2>
+  <ul class="checklist">
+    <li>Akzeptiert nur positive ganze Zahlen &gt; 0</li>
+    <li>Zeigt eine rote Fehlermeldung bei leerem Feld, 0 oder negativen Werten</li>
+    <li>Blockiert die Weitergabe des Wertes bei ungültiger Eingabe</li>
+    <li>Das Feld kann von außen deaktiviert werden</li>
+    <li>Es wird <code>@bind</code> + <code>@bind:event="oninput"</code> + <code>@bind:after</code> verwendet</li>
+  </ul>
+</div>
+
+<div class="page-footer">
+  <a href="03-input-validation.html">← Vorherige</a>
+  <a href="index.html">Übersicht</a>
+  <a href="04-dual-problem.html">Nächste →</a>
+</div>
+
+</div>
+
+</body>
+</html>
